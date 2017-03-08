@@ -1,7 +1,10 @@
 (ns sketch.core
-  (:require [monet.canvas :as c]))
+  (:require [clojure.set :as set]))
 
 (enable-console-print!)
+
+(defn pp [x]
+  (.log js/console x))
 
 ;;;;; Canvas
 
@@ -14,7 +17,6 @@
 
 ;;;;; Drawing
 
-(def drawing? (atom false))
 (defonce current-path (atom []))
 
 (defn loc [e]
@@ -24,15 +26,32 @@
 (set! (.-strokeStyle ctx) "#000")
 
 
-(def drag-listeners
-  {"mousedown" (fn [e]
-                 (reset! drawing? true)
-                 (reset! current-path [(loc e)]))
-   "mousemove" (fn [e]
-                 (when @drawing?
-                   (swap! current-path conj (loc e))))
-   "mouseup" (fn [e]
-               (reset! drawing? false))})
+(def curve-listeners
+  (let [drawing? (atom false)]
+    {"mousedown" (fn [e]
+                   (reset! drawing? true)
+                   (reset! current-path [(loc e)]))
+     "mousemove" (fn [e]
+                   (when @drawing?
+                     (swap! current-path conj (loc e))))
+     "mouseup" (fn [e]
+                 (reset! drawing? false))}))
+
+(def draw-listeners
+  (let [drawing? (atom false)]
+    {"mousedown" (fn [e]
+                   (reset! drawing? true)
+                   (.beginPath ctx)
+                   (let [[x y] (loc e)]
+                     (.moveTo ctx x y)))
+     "mousemove" (fn [e]
+                   (when @drawing?
+                     (let [[x y] (loc e)]
+                       (.lineTo ctx x y)
+                       (.stroke ctx))))
+     "mouseup" (fn [e]
+                 (.closePath ctx)
+                 (reset! drawing? false))}))
 
 (defn render-path! [path]
   (.beginPath ctx)
@@ -40,33 +59,34 @@
   (.stroke ctx)
   (.closePath ctx))
 
+(def active-listener-groups
+  [curve-listeners
+   draw-listeners])
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Listener Reloading Logic
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def listeners
-  (atom {}))
+(defn- keysets [m]
+  (into {} (map (fn [[k v]]
+                   (if (set? v)
+                     [k v]
+                     [k #{v}]))
+              m)))
 
-(defn add-listener! [event fn]
-  (swap! listeners update event (fnil conj #{}) fn))
+(defn- start! [canvas]
+  (let [ls (apply merge-with set/union
+                  (map keysets active-listener-groups))]
+    (doseq [[e fs] ls]
+      (doseq [f fs]
+        (.addEventListener canvas e f)))
+    (fn []
+      (doseq [[e fs] ls]
+        (doseq [f fs]
+          (.removeEventListener canvas e f))))))
 
-(doall (map (partial apply add-listener!) drag-listeners))
-
-(defonce ^:private loaded-listeners (atom {}))
-
-(defn reset-listeners! [canvas]
-  (do
-    (doseq [[e fns] @loaded-listeners]
-      (doseq [fn fns]
-        (.removeEventListener canvas e fn)))
-    (doseq [[e fns] @listeners]
-      (doseq [fn fns]
-        (.addEventListener canvas e fn)))
-    (reset! loaded-listeners @listeners)))
-
-(defn on-js-reload []
-  (reset-listeners! canvas)
-  ;; optionally touch your app-state to force rerendering depending on
-  ;; your application
-  ;; (swap! app-state update-in [:__figwheel_counter] inc)
-)
+(defonce started
+  (let [stop! (atom (start! canvas))]
+    (defn on-js-reload []
+      (@stop!)
+      (reset! stop! (start! canvas)))))
