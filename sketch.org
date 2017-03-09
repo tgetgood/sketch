@@ -1,6 +1,9 @@
 #+TITLE: A Modern Take on Sketchpad
 #+STARTUP:nologdone
 
+This isn't really about Sketchpad. I'm just taking the scope of what Sutherland
+did as inspiration.
+
 * Intentions
 
 	This project is part of the bigger [[file:~/org/modes.org][modes of interaction]] research agenda.
@@ -11,12 +14,132 @@
 	and the code updates, modify the code and the drawing updates.
 
 	The key to the generated code though is that it has to be useful, not just a
-	huge list of line segments.
+	huge list of line segments. I think it will be a lot easier to describe via a
+	series of example use cases.
+
+** Examples
+*** Simple line drawing
+
+		 Say I draw a rough circle. It isn't useful if the software captures it as a
+		 series of points or the line segments connecting them — which is how canvas
+		 and as far as I can tell most other drawing tools do it — we want to
+		 capture the fact that it's a circle, or approximately a circle.
+
+		 Of course we should keep the raw data the user entered, but we should also
+		 try to fit higher level building blocks to the user input. If the user
+		 entered a near circle, we should infer or prompt "did you really want a
+		 circle?".
+
+		 Taking this to the logical extreme we should have sliders controlling how
+		 much smoothing the computer adds to the curve. The essential tradeoff is
+		 between fidelity to the original drawing and simplicity of representation,
+		 where simplicity is defined as a small number of "natural shapes"; things
+		 like lines, arcs, bezier curves, and other drawings that the user
+		 — or potentially other users — have entered in the past.
+
+*** Abstracted shapes
+
+		 Say I draw a picture of a flower. In the past the computer has seen rose curves
+		 and recognises the petals as such. Ideally it would break my picture down into
+		 pieces and link those pieces to the known curves. Of course I might not care
+		 about that breakdown, so there should be an easy way to ignore it.
+
+		 Recognising that the petals are all variations on the same shape, the computer
+		 should offer to make them all the same spaced and rotated in a radially
+		 symmetric pattern — here we need to recognise near radial symmetry. That might
+		 not be what you want though, maybe you want the slight imperfections and
+		 variations, but you do want them evenly spaced.
+
+*** Generated Drawings
+
+		Say I draw something, copy it and move it over and shrink it, and then do
+		that again, and again, and I want to keep it going ad infinitum. If I do it
+		manually a couple of times, I should see code akin to
+
+		#+BEGIN_SRC clojure
+			(def shape {...})
+
+			(def picture
+				(compose
+				 (-> shape (move :right 2) (scale 0.5))
+				 (-> shape (move :right 3.1) (scale 0.27))
+				 (-> shape (move :right 3.6) (scale 0.125))))
+
+		#+END_SRC
+
+		Which I would then have to manually transform into a map over ranges to
+		create my infinite regression.
+
+		Aside: If we render lazily — by just aborting the render if the thing to be
+		rendered can't be bigger than a pixel — then we can easily accomodate
+		fractal and other lazily infinite drawings. I think that would be very
+		valuable, but let's see how that fits into the bigger picture.
+
+		Better would be if the computer generated a transducer and specific data
+		examples to fit in. Something like:
+
+		#+BEGIN_SRC clojure
+			(def shape ...)
+
+			(def no-auto-name
+				(map (fn [affinetx]
+							 (affine-transform shape affinetx))))
+
+			(def picture
+				(transduce no-auto-name compose [atx1 atx2 atx3]))
+		#+END_SRC
+
+		Would this acutally be better? Think accessibility, it should be a simple
+		matter of changing a sequence of [0.5 0.26 0.124] into (map #(2**-%) (range
+		2)) and a sequence of [2 3 3.5] into (map #(inc (reduce + %)) (map #(2**-%)
+		(map #(take % (range)) (range)))).
+
+		That's nothing approaching simple. The concept is so much simpler;
+		successive halves and triangular numbers. Why is it so hard to express
+		simple geometric math in code? What can we do about that?
+
+*** Linking to Real Data
+
+		If I want to draw a link graph inforgraphic, I want to draw a couple of
+		circles with lines connecting them, then I want to connect the radii and
+		colours of the circles and the length or width or colour of the lines to the
+		data. There should be a quick interface to accomplish this. Something like
+		the IDE that Victor talks about in that mario talk that inspired
+		lighttable. Of course that IDE was faked, but the ideas are great.
+
+		Furthermore to make inforgraphics really useful, we want to be able to
+		dynamically modify them as the underlying data or context changes. I'm not
+		keen to take on the kind of stuff D3 does, but it is a great solution to
+		that problem. Since we're using canvas and not SVG, maybe we can simplify it
+		by making everything explicitely immediate mode. No screen state at all. One
+		of the hardest problems for me when learning to program games in highschool
+		was keeping the game state and the screen state in sync. I ended up wiping
+		the screen on every frame because I couldn't deal with it, thus reinventing
+		the immediate mode (my games were stuttery and slow, but those 80486s didn't
+		have GPUs).
+
+*** Reacting to the User
+
+		Would it be too off topic to use such a tool to create rudimentary UIs?
+		After all most UIs are just infographics with mostly detrimental
+		interaction.
+
+** Purpose
+
+	 Of course the most interesting task here is making the computer abstract
+	 input and break it down into things it recognises and can then reassemble
+	 into the drawing you gave it. In my opinion this is a task that requires real
+	 visual intelligence, but I don't think it's too much to approach.
 
 ** Things to try
+
 	An interesting first experiment would be to try and map hand drawing to
 	B-splines. Symmetry and smoothness can be parameters adjustable by the user.
 
+	Simpler and also interesting would be to give the computer a primitive vocab
+	of built in canvas directives and come up with a search algorithm to try and
+	fit those to whatever you draw. This could actually turn out to be a harder
+	but more interesting problem.
 
 * Research
 ** Notes from Sutherland
@@ -117,14 +240,61 @@
 	I needed to remind myself how this fits into the grand scheme of the
 	document. It really is about new and broader forms of computer programming. I
 	think we need to move away from interaction and towards communication.
+
+	But why stop at UIs? There are concepts that are easier to express visually or
+	geometricall that symbolically / logically. There are also things that are
+	easier to express haptically — imagine trying to learn gymnastics from a book
+	— but that's another topic.
+
+	If as Hadamard proposed genius is the ability to think in multiple modes at
+	once, then we need to find new modes of interaction with computers.
+
 * Implementation
 ** Things to do
-*** DONE Capture brush strokes on canvas
-*** TODO Fit curves to strokes in the recursive naive fashion
-** Ideas
+*** Algorithmic First Steps
+**** DONE Capture brush strokes on canvas
+**** TODO Create a Primitive Language
+		 Take cavas' path primitives and wrap them up so that we can compose them at
+		 will.
+**** TODO Implement a metric for curve matching
+		 Average pixel difference between curves? Average square distance? We'll
+		 have to experiment and take runtime into account, this is going to be run a
+		 lot.
 
+		 What if we just XOR the bitmaps and count the black pixels? That sounds
+		 fast.
+**** TODO Search Algorithm
+		 Using the metric we should be able to come up with an A* style algo to find
+		 good fits.
+**** TODO Tweakable fit parameters
+		 This is important because we don't want to research from scratch as the
+		 smoothness tolerance increases / decreases. Maybe everything will be so
+		 fast that this won't matter, but my intuition is that the search should be
+		 as dynamic (cachable) as possible.
+**** TODO Master - Instance Logic
+		 Sketchpad had it right in allowing objects to be instances of a master
+		 object so that editing the master would change all occurences in the
+		 compound product.
+
+		 There's a mutability problem here though. I think what we want is a
+		 prototypical inheritance system where you can create new templates from old
+		 ones and where you can instantiate templates. Templates shouldn't change
+		 though lest editing one picture change another. Instead you need a way take
+		 all instances of a template and link them to a new template at will so that
+		 we have a localised version of this master-instance editing style.
+
+		 This is conceptually similar to Clojure's core principles: instances should
+		 be mutable references to immuatable data.
+*** UI
+**** TODO Widgets to control smoothness and symmetry
+**** TODO Basic Code Editor
+		 This isn't super high priority since we can probably just sync with emacs
+		 through a file buffer for initial development.
+
+		 N.B.: There are already some pretty nice browser based cljs editors. Don't
+		 make your own. Not until you have to.
 * Devlog
-*** <2017-03-07 Tue 14:51>
+	- Note taken on [2017-03-07 Tue 14:51] \\
 		After working most of the morning on learning how canvas works and looking
 		at some wrappers (fabric.js and monet) I'm starting to see that the
 		processing style stateful imperative programming is really just a sort of
