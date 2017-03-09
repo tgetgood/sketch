@@ -1,0 +1,134 @@
+#+TITLE: A Modern Take on Sketchpad
+#+STARTUP:nologdone
+
+* Intentions
+
+	This project is part of the bigger [[file:~/org/modes.org][modes of interaction]] research agenda.
+
+	The ultimate goal of this project is to achieve a bidirectional connection
+	between direct drawing and code. Draw a shape and see the code that generates
+	it (or in our case a potentially smoothed version of it). Modify the drawing
+	and the code updates, modify the code and the drawing updates.
+
+	The key to the generated code though is that it has to be useful, not just a
+	huge list of line segments.
+
+** Things to try
+	An interesting first experiment would be to try and map hand drawing to
+	B-splines. Symmetry and smoothness can be parameters adjustable by the user.
+
+
+* Research
+** Notes from Sutherland
+	 Mostly almost cliched advice now, but the fact he came to all these
+	 conclusions basically de novo is incredible.
+
+*** Generic structures are critical
+	 Everything was kept in a single ring buffer. A big reason why this was a
+	 win was that it allowed him to implement a basic form of automatic garbage
+	 collection. But it also minimises unnecessary encapsulation. Relates to
+	 Kay's insistence on dynamic inspectability of *everything*.
+
+*** Separate generic functions from those specific to individual shapes / operations
+	 You have to keep in mind that this was a decade before Kay said OO. Maybe
+	 by now this observations is less profound.
+
+*** Unlimited Applicability of generic operators.
+	 If anything can do X try to let everything do X.
+
+	 This relates back to the previous point, but encourages one to make as much
+	 generic as possible. Similar philosophy to Clojure's data abstractions. Also
+	 has a strong similarity to the idea of natural transformations as fully
+	 parametrically polymorphic functions.
+
+*** Hierarchy of shapes
+	 Something that processing makes unduly difficult is shape composition. Say
+	 I've drawn a nice flower petal and I want to copy and rotate it 30 degrees
+	 12 times and save the new thing. I now have a flower. Suppose I now want to
+	 modify the basic petal from which the flower is made. In most modern
+	 drawing languages I'd have to rebuild the compound shape after modifying
+	 the base part, but in sketchpad IS tracked the relations between shapes so
+	 that modifying the petal modifies anything built from the petal.
+
+	 Kay says that this instance-master relation is just the object-class
+	 relation of "real" OO. But there's something more, the instances dynamically
+	 track changes to the masters and compound shapes are created almost
+	 algebraically from instances (thus forming new masters from instances). This
+	 seems like a blending of Hindley-Milner style type algebra combined with
+	 prototypical inhertance of types.
+
+** Notes from Victor
+
+	 Interactive analog widgets to control model parameters should be embedded as
+	 close to the data they modify as possible. This means that upon clicking a
+	 curve you should access sliders controlling symmetry and smoothness
+	 enhancements, colour picker, labels, and anything else that pertains to that
+	 particular shape.
+
+	 Aside: Magic ink is not about what I recall at all. It's really an essay
+	 about how design focused on interaction and data entry is destructive to
+	 usability. That's the lesson that we learned the hard way at Semion. The way
+	 he introduces the topic causes a bit of a gut defensive reaction in me just
+	 because he's very absolute and general about it. The widest scope of his
+	 claims are untennable, but in reality his examples come from a much smaller
+	 space in which his claims are obviously and powerfully true.
+
+	 I wish I had given the essay more credit and brought it to the table three
+	 years ago.
+
+	 [[http://worrydream.com/#!/LearnableProgramming][This]] is the essay I was thinking of, it seems. [[http://worrydream.com/#!2/LadderOfAbstraction][Up and Down the Ladder of
+	 Abstraction]] is also a good one.
+
+** Readings / references
+** [[http://www.red3d.com/cwr/papers/1982/ASAS82.html]]
+** [[http://hillside.net/plop/2006/Papers/Library/interactive_informationgrap.pdf][Towards a Pattern Language for Interactive Information Graphics]]
+** [[https://en.wikipedia.org/wiki/Cognitive_dimensions_of_notations]]
+
+** Tools to use (or just steal from)
+ - [[https://github.com/ztellman/penumbra]]
+ - http://exupero.org/hazard/post/fractals/
+ - [[http://perfectionkills.com/exploring-canvas-drawing-techniques/][drawing tools]]
+
+* A Bigger Picture
+
+	The essential idea here is to replace the explicit programming of shapes with
+	the ability to drawn and *see* what the computer interprets your drawing as.
+
+	Given sufficient control to manipulate the drawings after the computer
+	interprets them, this could be a useful drawing tool in itself, but would
+	most likely just be a toy.
+
+	If you can link data into your drawing, then you can create data graphics in
+	something akin to the fashion of drawing.
+
+	Beyond that, what if you can link in arbitrary logic? Can you create a
+	programming environment based on visual and spatial feedback?
+
+	In short I'm leaning towards making this into a UI building tool. A way to
+	hand draw mockups and turn them into a working program all at once.
+
+	Would it be possible to separate the data, the interaction, and the visual
+	representation sufficiently to make porting this over to an existing cljs or
+	js program less painful. Can the designer's work be used for production
+	engineering?
+
+	Rather than writing another hundred UIs, I'd rather make rails.
+
+	I needed to remind myself how this fits into the grand scheme of the
+	document. It really is about new and broader forms of computer programming. I
+	think we need to move away from interaction and towards communication.
+* Implementation
+** Things to do
+*** DONE Capture brush strokes on canvas
+*** TODO Fit curves to strokes in the recursive naive fashion
+** Ideas
+
+* Devlog
+*** <2017-03-07 Tue 14:51>
+		After working most of the morning on learning how canvas works and looking
+		at some wrappers (fabric.js and monet) I'm starting to see that the
+		processing style stateful imperative programming is really just a sort of
+		visual machine code.
+
+		Do I have to implement my own hll on top of it and then write my new idea
+		on top of that? Crazy.
