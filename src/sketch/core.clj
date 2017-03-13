@@ -1,3 +1,6 @@
 (ns sketch.core)
 
-(defmacro t [])
+(defmacro defalias [spec aliases]
+  `(do
+     ~@(for [a aliases]
+         `(s/def ~a ~spec))))

@@ -253,16 +253,47 @@ did as inspiration.
 ** Things to do
 *** Algorithmic First Steps
 **** DONE Capture brush strokes on canvas
-**** TODO Create a Primitive Language
+**** DONE Create a Primitive Language
 		 Take cavas' path primitives and wrap them up so that we can compose them at
 		 will.
-**** TODO Implement a metric for curve matching
+
+		 Note: [2017-03-13 Mon 14:24] This is acutally pretty simple. Or at least
+		 what I've chosen to start is. Use Bezier curves for the low level
+		 representation and then create an open ended set of higher level
+		 abstractions starting with line and circle.
+**** TODO Implement a metric for curve matching [50%]
 		 Average pixel difference between curves? Average square distance? We'll
 		 have to experiment and take runtime into account, this is going to be run a
 		 lot.
 
 		 What if we just XOR the bitmaps and count the black pixels? That sounds
 		 fast.
+
+		 I think these are the only 2 approaches
+		 1. For each pixel in C1 find the closest pixel in C2 and average over all of
+				C1 (what average?)
+		 2. Render the curves to (a fake) screen and compare the bitmaps.
+
+		The first will probably be more accurate since it's a genuine metric on the
+		space of piecewise continuous curves in R2, but it's a lot of work
+
+		[[http://jpfop.sourceforge.net/jaxml-batik/html-docs/test.html][These guys]] take the second approach. They're creating SVGs to match pngs,
+		which is pretty similar to what I'm going for. But they expect near pixel
+		perfect accuracy. I'm looking to idealise the shapes somewhat.
+
+***** DONE Choose approach
+			Note: [2017-03-13 Mon 14:32]
+			The first approach is cubic in the length of the curve and involves some
+			difficult discrete math (probably not for a discrete math guy, but I'm an
+			analyst). The second should run linear in the number of pixels on the
+			screen (which for big curves should be less than the length of the curve
+			squared) and I think I can do it quickly to test.
+
+			A quick test is always a good choice.
+***** TODO Render bezier path to hidden canvas
+***** DONE Get bitmap (as data) from canvas
+***** TODO Compare curves
+
 **** TODO Search Algorithm
 		 Using the metric we should be able to come up with an A* style algo to find
 		 good fits.
@@ -280,8 +311,8 @@ did as inspiration.
 		 prototypical inheritance system where you can create new templates from old
 		 ones and where you can instantiate templates. Templates shouldn't change
 		 though lest editing one picture change another. Instead you need a way take
-		 all instances of a template and link them to a new template at will so that
-		 we have a localised version of this master-instance editing style.
+		 some set of instances of a template and link them to a new template at will
+		 so that we have a localised version of this master-instance editing style.
 
 		 This is conceptually similar to Clojure's core principles: instances should
 		 be mutable references to immuatable data.
@@ -294,11 +325,43 @@ did as inspiration.
 		 N.B.: There are already some pretty nice browser based cljs editors. Don't
 		 make your own. Not until you have to.
 * Devlog
-	- Note taken on [2017-03-07 Tue 14:51] \\
-		After working most of the morning on learning how canvas works and looking
-		at some wrappers (fabric.js and monet) I'm starting to see that the
-		processing style stateful imperative programming is really just a sort of
-		visual machine code.
+** [2017-03-07 Tue 14:51]
+	 After working most of the morning on learning how canvas works and looking
+	 at some wrappers (fabric.js and monet) I'm starting to see that the
+	 processing style stateful imperative programming is really just a sort of
+	 visual machine code.
 
-		Do I have to implement my own hll on top of it and then write my new idea
-		on top of that? Crazy.
+	 Do I have to implement my own hll on top of it and then write my new idea
+	 on top of that? Crazy.
+
+** [2017-03-13 Mon]
+	 The canvas path api looks like:
+		 - line
+		 - quadratic bezier
+		 - cubic bezier
+		 - arc
+		 - ellipse
+		 - rectangle
+
+		On the one hand, all of these curves can be approximated very closely by a
+		small number of bezier cubics so we don't need to complicate our model by
+		distinguishing between them. On the other hand, the whole point is to
+		capture the drawing in the most humanly natural way. Abstraction is all
+		about finding higher level concepts that make things simpler. Semicircle is
+		simpler than two bezier curves in a path. To most people almost anything is
+		simpler than a bezier curve.
+
+		At a low level I think it makes a lot of sense to just use bezier
+		curves. But the model needs to learn when the bezier curves can be replaced
+		by higer level constructs. This same logic should then translate to user
+		defined higher level shapes.
+
+		In terms of actual development I think we should start with a low level
+		representation in terms purely of bezier cubics, with a base set of
+		"abstractions" based on the other paths in the API.
+
+** [2017-03-13 Mon 14:23]
+
+	 Spec really is handy for keeping data formats straight. It replaces my blocks
+	 of pseudo type comments wih something way more powerful. I think it'll be
+	 worth the investment to learn more thoroughly.

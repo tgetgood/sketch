@@ -1,5 +1,8 @@
 (ns sketch.core
-  (:require [clojure.set :as set]))
+  (:require-macros
+   [sketch.core :refer [defalias]])
+  (:require [clojure.set :as set]
+            [clojure.spec :as s]))
 
 (enable-console-print!)
 
@@ -59,9 +62,54 @@
   (.stroke ctx)
   (.closePath ctx))
 
+(defn render-bezier [{[c1x c1y] ::c1
+                      [c2x c2y] ::c2
+                      [e1x e1y] ::e1
+                      [e2x e2y] ::e2}]
+  (.beginPath ctx)
+  (.moveTo ctx e1x e1y)
+  (.bezierCurveTo ctx c1x c1y c2x c2y e2x e2y)
+  (.stroke ctx)
+  (.closePath ctx))
+
 (def active-listener-groups
   [curve-listeners
    draw-listeners])
+
+;;;;; Curves
+
+(def shapes
+  "Higher level shapes"
+  [::line
+   ::circle
+   ::ellipse
+   ::polynomial
+   ::exponential])
+
+;; Everything below is 2D
+
+(s/def ::point (s/tuple number? number?))
+
+(defalias ::point [::e1 ::e2 ::c1 ::c2])
+
+(s/def ::bezier
+  (s/keys :req [::e1 ::e2 ::c1 ::c2]))
+
+;;;;; Pixel mappings
+
+(defn- get-pixels []
+  (.-data (.getImageData ctx 0 0 (.-width canvas) (.-height canvas))))
+
+(defn- pixel-distance
+  "Returns the number of pixels that differ between the 2 images.
+  N.B.: This is intended for monochrome images and so only compares the alpha
+  bytes."
+  [p1 p2]
+  (let [c (volatile! 0)]
+    (doseq [i (range 0 (.-length p1) 4)]
+      (when (not= (aget p1 (+ i 3)) (aget p2 (+ i 3)))
+        (vswap! c inc)))
+    @c))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Listener Reloading Logic
