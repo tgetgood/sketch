@@ -13,36 +13,52 @@
 
 (def canvas (.getElementById js/document "the-canvas"))
 
-(set! (.-width canvas) (.-innerWidth js/window))
-(set! (.-height canvas) (.-innerHeight js/window))
+(def width (.-innerWidth js/window))
+(def height (.-innerHeight js/window))
+
+(set! (.-width canvas) width)
+(set! (.-height canvas) height)
 
 (def ctx (.getContext canvas "2d"))
 
 ;;;;; Drawing
 
-(defonce current-path (atom []))
+(defonce current-path (atom [::union]))
 
 (defn loc [e]
   [(.-clientX e) (.-clientY e)])
 
 (set! (.-lineWidth ctx) 1)
-(set! (.-strokeStyle ctx) "#000")
 
+(defn set-colour! [c]
+  (set! (.-strokeStyle ctx) c))
+
+(defn red! []
+  (set-colour! "#FF0000"))
+
+(defn black! []
+  (set-colour! "#000"))
 
 (def curve-listeners
-  (let [drawing? (atom false)]
+  (let [drawing? (atom false)
+        lp (atom nil)]
     {"mousedown" (fn [e]
                    (reset! drawing? true)
-                   (reset! current-path [(loc e)]))
+                   (reset! lp (loc e))
+                   (reset! current-path [::union []]))
      "mousemove" (fn [e]
                    (when @drawing?
-                     (swap! current-path conj (loc e))))
+                     (swap! current-path update 1 conj [::line [@lp (loc e)]])
+                     (reset! lp (loc e)) ))
      "mouseup" (fn [e]
+                 (reset! lp nil)
                  (reset! drawing? false))}))
+
 
 (def draw-listeners
   (let [drawing? (atom false)]
     {"mousedown" (fn [e]
+                   (pp e)
                    (reset! drawing? true)
                    (.beginPath ctx)
                    (let [[x y] (loc e)]
@@ -56,19 +72,39 @@
                  (.closePath ctx)
                  (reset! drawing? false))}))
 
-(defn render-path! [path]
-  (.beginPath ctx)
-  (doall (map (fn [[x y]] (.lineTo ctx x y)) path))
-  (.stroke ctx)
-  (.closePath ctx))
+(defn clear! []
+  (.clearRect ctx 0 0 width height))
 
-(defn render-bezier [{[c1x c1y] ::c1
-                      [c2x c2y] ::c2
-                      [e1x e1y] ::e1
-                      [e2x e2y] ::e2}]
-  (.beginPath ctx)
+(defmulti draw* first)
+
+(defmethod draw* ::bezier
+  [[_ {[c1x c1y] ::c1
+       [c2x c2y] ::c2
+       [e1x e1y] ::e1
+       [e2x e2y] ::e2}]]
   (.moveTo ctx e1x e1y)
-  (.bezierCurveTo ctx c1x c1y c2x c2y e2x e2y)
+  (.bezierCurveTo ctx c1x c1y c2x c2y e2x e2y))
+
+(defmethod draw* ::line
+  [[_ [[x1 y1] [x2 y2]]]]
+  (.moveTo ctx x1 y1)
+  (.lineTo ctx x2 y2))
+
+(defmethod draw* ::union
+  [[_ data]]
+  (doall (map draw* data)))
+
+(defn get-style [ctx]
+  {})
+
+(defn set-style [ctx style]
+  {})
+
+(defn draw! [path]
+  ;; TODO: Save old style
+  ;; TODO: Set path style
+  (.beginPath ctx)
+  (draw* path)
   (.stroke ctx)
   (.closePath ctx))
 
@@ -110,6 +146,31 @@
       (when (not= (aget p1 (+ i 3)) (aget p2 (+ i 3)))
         (vswap! c inc)))
     @c))
+
+;;;;; Discrete math
+
+(defn d [path t delta]
+  (let [[x2 y2] (nth path (+ t delta))
+        [x1 y1] (nth path t)]
+    [(/ (- x2 x1) delta) (/ (- y2 y1) delta)]))
+
+(defn draw-tangent! [path t delta l]
+  (let [[dx dy] (d path t delta)
+        [x y] (nth path t)]
+    (draw! {::type ::line
+            ::data [[x y] [(+ x (* dx l)) (+ y (* dy l))]]})))
+
+(defn aff [[x y] [dx dy] l]
+  [(+ x (* dx l)) (+ y (* dy l))])
+
+(defn bfit [path l1 l2]
+  (let [points (mapv (comp first second) (second path))
+        e1 (first points)
+        e2 (last points)
+        d1 (d points 0 5)
+        d2 (d points (dec (count points)) -5)]
+    [::bezier {::e1 e1 ::e2 e2
+               ::c1 (aff e1 d1 l1) ::c2 (aff e2 d2 (- l2))}]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Listener Reloading Logic

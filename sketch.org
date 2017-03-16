@@ -365,3 +365,51 @@ did as inspiration.
 	 Spec really is handy for keeping data formats straight. It replaces my blocks
 	 of pseudo type comments wih something way more powerful. I think it'll be
 	 worth the investment to learn more thoroughly.
+
+** [2017-03-15 Wed 15:05]
+	 
+	 After lots of tests and quite a bit of confusion about reducers and
+	 transducers, I've got benchmarks showing that using fold on native clojure
+	 vectors is about 4x faster than doing JS array iteration and 50x faster than
+	 doing the exact same operation in CLJS using reduce.
+	 
+	 So now I've got a dilemma: I'd like the interface to be in js, but the
+	 learning computation is just going to be too damned slow. I could use a cljs
+	 frontend and a clj backend, but then I have a fullblown client-server app and
+	 that's no fun.
+	 
+	 #+BEGIN_SRC clojure
+     (defn rf
+       "Adds up the differing pixels"
+       ([] 0)
+       ([x] x)
+       ([acc [x y]]
+        (if (= x y)
+          acc
+          (inc acc))))
+
+     (def l 2206948)
+
+     (def p (into [] (take l (repeatedly (fn [] [(rand-int 255) (rand-int 255)])))))
+
+     (r/fold + rf p1) ; => takes less than 100ms
+
+	 #+END_SRC
+
+	 It's only 3x faster if I do it the "fast" way in JS. It might make sense to
+	 see how far we can go with that.
+	 
+	 On the otherhand it might make more sense to input the drawings in cljs, get
+	 the point vector and then do the shape fitting in clojure as a standalone
+	 thing. 
+
+** [2017-03-16 Thu 14:58]
+
+	 I can now fit hand drawn bezier curves to real bezier curves quite nicely,
+	 unless the ends are sloppy, then all hell breaks loose.
+	 
+	 The fitter needs to be more robust. It needs to learn about extraneous
+	 details and how to ignore them.
+	 
+	 How can I program the system to learn these things without programming them
+	 into the system? That's the key to generality.

@@ -10,6 +10,9 @@
                  [org.clojure/clojurescript "1.9.494"]
                  [org.clojure/core.async "0.3.441"
                   :exclusions [org.clojure/tools.reader]]
+                 [quil "2.6.0"]
+                 [org.clojure/tools.namespace "0.2.11"]
+                 [incanter "1.5.7"]
                  [rm-hull/monet "0.3.0"]
                  [cljsjs/fabric "1.5.0-0"]]
 
