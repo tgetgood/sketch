@@ -212,10 +212,31 @@ did as inspiration.
 ** [[http://hillside.net/plop/2006/Papers/Library/interactive_informationgrap.pdf][Towards a Pattern Language for Interactive Information Graphics]]
 ** [[https://en.wikipedia.org/wiki/Cognitive_dimensions_of_notations]]
 
+
 ** Tools to use (or just steal from)
  - [[https://github.com/ztellman/penumbra]]
  - http://exupero.org/hazard/post/fractals/
  - [[http://perfectionkills.com/exploring-canvas-drawing-techniques/][drawing tools]]
+
+** AI and RL
+	 - [[http://soar.eecs.umich.edu/][Soar]]
+		 It sounds rather vain and premature to design a framework for intelligence
+		 without any useful definition of intelligence, but there's almost certainly
+		 useful stuff here.
+
+		 Fuck that. This is basically machine code. People are so concerned with
+		 speed nowadays that they're willing to make the job 1000x harder just so
+		 that it's 100x faster. Compute time is cheap, I'm not doing that.
+
+	 - [[http://www.princeton.edu/~ndaw/d11a.pdf][Phasic Dopamine System and TD learning]]
+
+	 - Chunking
+		 - [[https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4138363/][Chunking performance seems independent of conscious attention]]
+			 In motor skills.
+		 - [[http://www.psych.utoronto.ca/users/peterson/psy430s2001/Miller%20GA%20Magical%20Seven%20Psych%20Review%201955.pdf][Miller's Basic Results]]
+		 - [[http://www.bcp.psych.ualberta.ca/~mike/Pearl_Street/PSYCO354/pdfstuff/Readings/Gobet1.pdf][Chunking in Human Learning]]
+		 - [[https://en.wikipedia.org/wiki/EPAM][EPAM]]
+		 - [[http://chrest.info/][CHREST]]
 
 * A Bigger Picture
 ** From Drawing to Programming
@@ -256,7 +277,7 @@ did as inspiration.
 	once, then we need to find new modes of interaction with computers.
 
 ** Search for General Principles
-	 
+
 	 The basic idea here is to create a feedback loop where the computer
 	 reproduces the input it sees through a series of constraints.
 
@@ -268,26 +289,31 @@ did as inspiration.
 	 given abstraction. This up and down search could be the key to metaphorical
 	 extension of knowledge. That's a hell of a leap, but it's something I want to
 	 test.
-	 
+
 	 This is the same principle as if we were trying to learn to produce overtone
 	 code which when played closely matches some input sound bite.
-	 
+
 	 It's also similar to the idea of generating code that passes a given test
 	 suite. Here it's more complicated because there's potentially much more
-	 ambiguity just from the complexity of code. 
+	 ambiguity just from the complexity of code.
 
 	 At the same time, we're ignoring similar complexity and ambiguity in the
 	 other domains: with sound we don't care what happens if we can't hear it and
 	 with drawing we don't care about what we can't see. so why can't the code not
 	 care about cases that aren't covered by the tests? That's the specifier's
 	 problem...
-	 
+
 	 So that's the end goal of this research program, to learn arbitrary structure
 	 from direct feedback loops. Deep structure ideally. I just need to come up
 	 with enough deep structure to make it possible.
-	 
+
 	 So. Don't get caught in the weeds. Try to keep all three use cases in mind
 	 and abstract the logic to suit.
+
+*** Criteria for Success
+
+		If the same system can learn to play chess or go without modifications to
+		the analysis/synthesis structure then I'll consider this wildly successful.
 
 * Implementation
 ** Things to do
@@ -409,55 +435,55 @@ did as inspiration.
 	 worth the investment to learn more thoroughly.
 
 ** [2017-03-15 Wed 15:05]
-	 
+
 	 After lots of tests and quite a bit of confusion about reducers and
 	 transducers, I've got benchmarks showing that using fold on native clojure
 	 vectors is about 4x faster than doing JS array iteration and 50x faster than
 	 doing the exact same operation in CLJS using reduce.
-	 
+
 	 So now I've got a dilemma: I'd like the interface to be in js, but the
 	 learning computation is just going to be too damned slow. I could use a cljs
 	 frontend and a clj backend, but then I have a fullblown client-server app and
 	 that's no fun.
-	 
+
 	 #+BEGIN_SRC clojure
-     (defn rf
-       "Adds up the differing pixels"
-       ([] 0)
-       ([x] x)
-       ([acc [x y]]
-        (if (= x y)
-          acc
-          (inc acc))))
+		 (defn rf
+			 "Adds up the differing pixels"
+			 ([] 0)
+			 ([x] x)
+			 ([acc [x y]]
+				(if (= x y)
+					acc
+					(inc acc))))
 
-     (def l 2206948)
+		 (def l 2206948)
 
-     (def p (into [] (take l (repeatedly (fn [] [(rand-int 255) (rand-int 255)])))))
+		 (def p (into [] (take l (repeatedly (fn [] [(rand-int 255) (rand-int 255)])))))
 
-     (r/fold + rf p1) ; => takes less than 100ms
+		 (r/fold + rf p1) ; => takes less than 100ms
 
 	 #+END_SRC
 
 	 It's only 3x faster if I do it the "fast" way in JS. It might make sense to
 	 see how far we can go with that.
-	 
+
 	 On the otherhand it might make more sense to input the drawings in cljs, get
 	 the point vector and then do the shape fitting in clojure as a standalone
-	 thing. 
+	 thing.
 
 ** [2017-03-16 Thu 14:58]
 
 	 I can now fit hand drawn bezier curves to real bezier curves quite nicely,
 	 unless the ends are sloppy, then all hell breaks loose.
-	 
+
 	 The fitter needs to be more robust. It needs to learn about extraneous
 	 details and how to ignore them.
-	 
+
 	 How can I program the system to learn these things without programming them
 	 into the system? That's the key to generality.
-	 
+
 ** [2017-03-17 Fri 09:54]
-	 
+
 	 Keep in mind that the comparison of images is a necessary step, not the core
 	 or raison d'etre of the program. Making the comparison fast will make new and
 	 more complex types of search and learning possible, but be careful not to
