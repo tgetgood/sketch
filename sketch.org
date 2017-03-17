@@ -141,6 +141,11 @@ did as inspiration.
 	fit those to whatever you draw. This could actually turn out to be a harder
 	but more interesting problem.
 
+** Names
+	 - Pallas
+	 - Athene
+	 - Triton
+
 * Research
 ** Notes from Sutherland
 	 Mostly almost cliched advice now, but the fact he came to all these
@@ -213,6 +218,7 @@ did as inspiration.
  - [[http://perfectionkills.com/exploring-canvas-drawing-techniques/][drawing tools]]
 
 * A Bigger Picture
+** From Drawing to Programming
 
 	The essential idea here is to replace the explicit programming of shapes with
 	the ability to drawn and *see* what the computer interprets your drawing as.
@@ -248,6 +254,40 @@ did as inspiration.
 
 	If as Hadamard proposed genius is the ability to think in multiple modes at
 	once, then we need to find new modes of interaction with computers.
+
+** Search for General Principles
+	 
+	 The basic idea here is to create a feedback loop where the computer
+	 reproduces the input it sees through a series of constraints.
+
+	 In this case the constraints are that it can only produce data which is
+	 interpreted by a renderer. The rendered shape is then compared to the
+	 original for feedback. Additional constraints around the complexity and
+	 number of shapes used is an essential further step, as is the ability to come
+	 up with multiple abstractions of a given drawing and multiple instances of a
+	 given abstraction. This up and down search could be the key to metaphorical
+	 extension of knowledge. That's a hell of a leap, but it's something I want to
+	 test.
+	 
+	 This is the same principle as if we were trying to learn to produce overtone
+	 code which when played closely matches some input sound bite.
+	 
+	 It's also similar to the idea of generating code that passes a given test
+	 suite. Here it's more complicated because there's potentially much more
+	 ambiguity just from the complexity of code. 
+
+	 At the same time, we're ignoring similar complexity and ambiguity in the
+	 other domains: with sound we don't care what happens if we can't hear it and
+	 with drawing we don't care about what we can't see. so why can't the code not
+	 care about cases that aren't covered by the tests? That's the specifier's
+	 problem...
+	 
+	 So that's the end goal of this research program, to learn arbitrary structure
+	 from direct feedback loops. Deep structure ideally. I just need to come up
+	 with enough deep structure to make it possible.
+	 
+	 So. Don't get caught in the weeds. Try to keep all three use cases in mind
+	 and abstract the logic to suit.
 
 * Implementation
 ** Things to do
@@ -326,6 +366,7 @@ did as inspiration.
 		 make your own. Not until you have to.
 * Devlog
 ** [2017-03-07 Tue 14:51]
+
 	 After working most of the morning on learning how canvas works and looking
 	 at some wrappers (fabric.js and monet) I'm starting to see that the
 	 processing style stateful imperative programming is really just a sort of
@@ -335,6 +376,7 @@ did as inspiration.
 	 on top of that? Crazy.
 
 ** [2017-03-13 Mon]
+
 	 The canvas path api looks like:
 		 - line
 		 - quadratic bezier
@@ -413,3 +455,10 @@ did as inspiration.
 	 
 	 How can I program the system to learn these things without programming them
 	 into the system? That's the key to generality.
+	 
+** [2017-03-17 Fri 09:54]
+	 
+	 Keep in mind that the comparison of images is a necessary step, not the core
+	 or raison d'etre of the program. Making the comparison fast will make new and
+	 more complex types of search and learning possible, but be careful not to
+	 entwine it with the rest of the logic.
