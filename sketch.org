@@ -237,6 +237,9 @@ did as inspiration.
 		 - [[http://www.bcp.psych.ualberta.ca/~mike/Pearl_Street/PSYCO354/pdfstuff/Readings/Gobet1.pdf][Chunking in Human Learning]]
 		 - [[https://en.wikipedia.org/wiki/EPAM][EPAM]]
 		 - [[http://chrest.info/][CHREST]]
+	 - Other models of learning
+		 - [[https://en.wikipedia.org/wiki/Adaptive_resonance_theory][Adaptive Resonance Theory]]
+		 - [[https://en.wikipedia.org/wiki/Self-organizing_map][Kohonen Networks]]
 
 * A Bigger Picture
 ** From Drawing to Programming
