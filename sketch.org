@@ -8,3 +8,136 @@ The goal is a duality between the input modes of code and sketching on
 canvas. The idea being that if you can see the code your sketch produces, you'll
 have an enourmously easier time animating it.
 
+* Goals
+** Usability
+	 First and foremost this is intended to be usable by non programmers —
+	 students, artists, etc. — to produce complex visuals and animations.
+
+	 It needs to support users with no programming ability whatsoever and walk
+	 them progressively by concrete example through more and more complex
+	 constructions.
+** Don't be Processing
+	 In particular try to make everything explicite both in the code and in the
+	 UI. I don't really want to create a complex UI, but that's going to be
+	 necessary I think since we want the barrier to entry to be as low as
+	 possible.
+
+	 See (TODO: Remember the name of that essay by Victor and link to it).
+* Implementation
+** Ramble
+	 If I draw a blade of a windmill, I want first and foremost to be able to see
+	 the code that produces it:
+
+	 #+BEGIN_SRC clojure
+		 (def G__1
+			 [::lines [[0 100] [110 400] [230 200]]])
+	 #+END_SRC
+
+	 The representation doesn't matter at the moment[fn:1], I just want a name for what
+	 I just drew. The becomes especially important when shapes are viewed relative
+	 to each other
+
+	 What I need to be able to see to build a complex drawing is how my changes in
+	 the GUI effect the code. If I know that copying a shape, rotating, and moving
+	 it generates the code:
+
+	 #+BEGIN_SRC clojure
+		 (def G__2
+			 (->> G__1
+						(translate [0 10])
+						(rotate 35)))
+	 #+END_SRC
+
+	 Then I can infer that to build a four blade turbine I need to:
+
+	 #+BEGIN_SRC clojure
+		 (def turbine4
+			 (combine
+				[G__1
+				 (->> G__1
+							(translate [0 10])
+							(rotate 90))
+				 (->> G__1
+							(translate [0 10])
+							(rotate 180))
+				 (->> G__1
+							(translate [0 10])
+							(rotate 270))]))
+	 #+END_SRC
+
+	 A more advanced user should of course be able to see that there is a more
+	 general and simpler solution to this problem:
+
+	 #+BEGIN_SRC clojure
+		 (defn rot-blade [a]
+			 (->> G__1
+						(translate [0 10])
+						(rotate a)))
+
+		 (defn turbine [n]
+			 (combine
+				(->> (range 0 360)
+						 (filter #(= 0 (mod % (quot 360 n))))
+						 rot-blade)))
+	 #+END_SRC
+
+	 Now that you have a turbine, you want it to spin. You should infer
+	 (correctly!) that calling rotate on the combined turbine will cause the
+	 entire thing to spin as you would expect. So it shouldn't be a stretch to
+	 infer that the sequence of frames you want in your animation should be:
+
+	 #+BEGIN_SRC clojure
+		 (->> (range)
+					(filter #(= 0 (mod % 30)))
+					(map #(rotate % (turbine 4))))
+	 #+END_SRC
+
+	 In principle all you should then need to do is pass that to an `animate` fn.
+
+	 Of course we have an obstacle to get over teaching users to think of ranges
+	 and conprehensions as animations. Some simple renaming might be enough to
+	 make it substantially easier.
+
+	 I think that sequences (potentially infinite) of frames are more intuitive to
+	 people who draw — probably to all non programmers — than mutable
+	 canvases. Think Renaissance flip books.
+
+** Considerations
+	 Given that animation loops are going to execute infinitely in the general
+	 case — which I expect to be the norm — there will need to be a mechanism in
+	 place to kill it.
+
+	 I think it would be best if the `draw` and `animate` fns, when called, clear
+	 all current drawings and animations. This will force the user to build
+	 complex animations by composing frames rather than thinking imperatively of
+	 many frames at once.
+** Real Symmetry
+	 If I create a frame seq as in the ramble section, I should be able to draw
+	 the nth frame, and then make changes to it graphically in the editor. Those
+	 changes should be reflected in the code.
+
+	 Stumbling block: presumably you don't edit individual frames of an animation,
+	 generally speaking, so how should the editor work visual continuity into the
+	 picture? I don't have any ideas about this atthe moment, so it's probably
+	 best if we just make the user deal with the animations frame by frame at
+	 first. I thnk that animators might be used to that. At least as a starting
+	 point it's okay.
+
+* Notes
+** [2017-04-07 Fri 13:01]
+	 Some of the basic editing commands will need to be macros, and I want them to
+	 be evaluted from the browser, so I'll need to fully bootstrap cljs.
+* Devlog
+** Outstanding
+*** TODO Touch events
+		Currently canvas events are only implemented for mouse events. Should use
+		hammer or whatever is cooler nowadays to get the rest. Probably easier to
+		just do it myself though.
+*** TODO Dump code for drawing to console
+		Temporary workaround until we set up the editor in the browser.
+*** TODO Set up repl in the browser
+		We want to be able to draw with code directly in the browser.
+* Footnotes
+
+[fn:1] And of course you need to be able to change the name and have the editor
+handle the change properly.
