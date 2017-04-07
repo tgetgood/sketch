@@ -23,7 +23,10 @@
 
 ;;;;; Drawing
 
-(defonce current-path (atom [::union]))
+(defonce current-path (atom [::lines []]))
+
+(defn np! []
+  (reset! current-path [::lines []]))
 
 (defn loc [e]
   [(.-clientX e) (.-clientY e)])
@@ -44,11 +47,10 @@
         lp (atom nil)]
     {"mousedown" (fn [e]
                    (reset! drawing? true)
-                   (reset! lp (loc e))
-                   (reset! current-path [::union []]))
+                   (reset! lp (loc e)))
      "mousemove" (fn [e]
                    (when @drawing?
-                     (swap! current-path update 1 conj [::line [@lp (loc e)]])
+                     (swap! current-path update 1 conj (loc e))
                      (reset! lp (loc e)) ))
      "mouseup" (fn [e]
                  (reset! lp nil)
@@ -75,7 +77,60 @@
 (defn clear! []
   (.clearRect ctx 0 0 width height))
 
-(defmulti draw* first)
+(def dts
+  "Draw type switch. Keyfn for multimethods that take drawings."
+  (fn [[t & _] & _] t))
+
+(defmulti rotate
+  ;; Rotation matrix
+  ;; [[cos \theta -sin \theta]
+  ;;  [sin \theta cos \theta]]
+  "Returns an image rotated *clockwise* by angle about the centre point."
+  dts)
+(defmulti scale
+  "Scales image by scalar z about centre point"
+  dts)
+
+(defmulti translate
+  "Translates image by given vector"
+  dts)
+
+(defn rad [d]
+  (/ (* d js/Math.PI) 180))
+
+(defn rotate-p
+  "Rotate [x2 y2] around [x1 y1] clockwise by angle as in degrees."
+  [[x2 y2] [x1 y1] a]
+  (let [x (- x2 x1)
+        y (- y2 y1)
+        c (js/Math.cos (rad a))
+        s (js/Math.sin (rad a))]
+    [(+ x1 (- (* x c) (* y s))) (+ (* x s) (* y c) y1)]))
+
+(defmethod rotate ::lines
+  [[_ data] centre angle]
+  [::lines (map #(rotate-p % centre angle) data)])
+
+(defn translate-p
+  "Translate second arg by first.
+  N.B.: It's symettric so it doesn't matter."
+  [[x1 y1] [x2 y2]]
+  [(+ x1 x2) (+ y1 y2)])
+
+(defmethod translate ::lines
+  [[_ data] v]
+  [::lines (map (partial translate-p v) data)])
+
+(defn scale-p
+  "Scales [x2 y2] by s around [x1 y1]"
+  [[x2 y2] [x1 y1] s]
+  [(+ x1 (* s (- x2 x1))) (+ y1 (* s (- y2 y1)))])
+
+(defmethod scale ::lines
+  [[_ data] centre z]
+  [::lines (map #(scale-p % centre z) data)])
+
+(defmulti draw* dts)
 
 (defmethod draw* ::bezier
   [[_ {[c1x c1y] ::c1
@@ -93,6 +148,14 @@
 (defmethod draw* ::union
   [[_ data]]
   (doall (map draw* data)))
+
+(defmethod draw* ::lines
+  [[_ data]]
+  ;; TODO: Would it make more sense to have a normalisation preprocessor and
+  ;; keep this purely side effectful?
+  (draw* 
+   [::union
+    (mapv (fn [p q] [::line [p q]]) data (rest data))]))
 
 (defn get-style [ctx]
   {})
