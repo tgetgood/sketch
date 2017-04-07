@@ -103,14 +103,35 @@ have an enourmously easier time animating it.
 	 canvases. Think Renaissance flip books.
 
 ** Considerations
-	 Given that animation loops are going to execute infinitely in the general
-	 case — which I expect to be the norm — there will need to be a mechanism in
-	 place to kill it.
+*** Plain ol Cartesian coordinates
+		Why is the origin the top left in most graphics programs? Because it was
+		easier to implement that way in some particular application or architecture
+		and it's just been stuck that way ever since.
+*** Looping Like Sonic Pi?
+		Given that animation loops are going to execute infinitely in the general
+		case — which I expect to be the norm — there will need to be a mechanism in
+		place to kill it.
 
-	 I think it would be best if the `draw` and `animate` fns, when called, clear
-	 all current drawings and animations. This will force the user to build
-	 complex animations by composing frames rather than thinking imperatively of
-	 many frames at once.
+		I think it would be best if the `draw` and `animate` fns, when called, clear
+		all current drawings and animations. This will force the user to build
+		complex animations by composing frames rather than thinking imperatively of
+		many frames at once. And having to keep track of threads of animation.
+*** Affine TXs
+		What's the most intuitive way to represent affine transformations?
+		Defninitely not translate to the origin, rotate, and translate back.
+
+		Every picture should be in it's own normalised form at its own origin,
+		compound pictures should be expressed as unions of affine transforms of
+		normalised sub pictures. That's the best way I can think of to make my
+		pseudo API a reality in any case.
+**** Questions
+***** Around what do we rotate?
+			Logical options are a corner of a bounding box, centre of bounding box, or
+			ortocentre of the points in the drawing.
+
+			The centre of the bounding box seems the most logical to me, but if we
+			truly want to be general, a rotation should take both a centre and an
+			angle. Making the UI reflect that would be trivial.
 ** Real Symmetry
 	 If I create a frame seq as in the ramble section, I should be able to draw
 	 the nth frame, and then make changes to it graphically in the editor. Those
@@ -122,6 +143,34 @@ have an enourmously easier time animating it.
 	 best if we just make the user deal with the animations frame by frame at
 	 first. I thnk that animators might be used to that. At least as a starting
 	 point it's okay.
+** UI Considerations
+*** Objects
+		The way I'm currently thinking about the tool, you'll be able to draw
+		individual shapes — maybe every time you hit enter or the space bar it takes
+		everything you've drawn and names it as one thing; later on we can worry
+		about automatically recognising subparts.
+
+		So how do we worry about the master-instance dichotomy? Really if compound
+		drawings are made up of unions affine txs of other drawings, then simply
+		replacing the seed var in the pipelines will let us act like we changed a
+		master without mutating the master itself.
+
+		So we need several things:
+
+		We need a way to take a canvas, pick out one item from it and enter an
+		editing more for just that item.
+
+		When you edit a shape, you should by default be making a new shape derived
+		from the old one. These chains of derivation can get arbitrarily long and
+		that's part of the power. But at the same time you often want to replace the
+		shape you chose with the edited version within the context of the drawing
+		that you're making and that should be easily done if not the default. But
+		then what happens at the top level? Do we need to worry about keeping a
+		sketchbook?
+
+		We need an intuitive way to replace all instances of shape S in drawing D
+		with some other shape S'. Syntactically this is just refactoring, so we need
+		something IDE-like, but what the hell does this mean graphically?
 
 * Notes
 ** [2017-04-07 Fri 13:01]
@@ -129,6 +178,16 @@ have an enourmously easier time animating it.
 	 be evaluted from the browser, so I'll need to fully bootstrap cljs.
 * Devlog
 ** Outstanding
+*** DONE Affine Transforms [3/3]
+		Keep in mind that rotations and scaling all happen about a point. Make that
+		point explicit.
+		- [X] Rotation about a point
+		- [X] Translation
+		- [X] Scale
+*** TODO New coords
+		(0, 0) is the bottom left corner in every math class I've ever heard
+		of. It's how basically all graphs do are set and it's how Descartes did
+		it. Who the fuck switched it to the top left?
 *** TODO Touch events
 		Currently canvas events are only implemented for mouse events. Should use
 		hammer or whatever is cooler nowadays to get the rest. Probably easier to
