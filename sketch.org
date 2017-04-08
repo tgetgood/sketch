@@ -132,6 +132,36 @@ have an enourmously easier time animating it.
 			The centre of the bounding box seems the most logical to me, but if we
 			truly want to be general, a rotation should take both a centre and an
 			angle. Making the UI reflect that would be trivial.
+*** Normalisation
+		From the user's point of view, shapes will be either atomic drawings, or
+		transformations and compositions of other shapes, but internally this won't
+		do.
+
+		I'd like to internally represent drawings as pure data. One way to
+		accomplish this would be bitmaps, which are data after all. That would throw
+		away a lot of structure though. Remember that a long term goal it to
+		automatically recognise when you've drawn something that's almost identical
+		to something else — like a not quite straight line, or an off square — and
+		suggest fixing it for you. The whole slider that lets the user trade off
+		between fidelity of what they drew and simplicity of representation (which
+		roughly corresponds to "correctness" or "niceness" of the drawing).
+
+		To this end, some sort of picture normal form is needed. If we relax pixel
+		coordinates to be doubles, we can map any shape onto the unit square [0, 1]
+		X [0, 1] and store those pixels along with the inverse affine transform. The
+		affine transform functions would then act on the affine offset, not on the
+		pixels themselves.
+
+		So now we need a canonical order of applying the affine offset info
+		(they're noncommutative) but that's easy enough. We have time to look for
+		simpler solutions though and should.
+
+		We also need a canonical value for rotation and reflection. The first idea
+		that comes to mind is to take the line of best fit of the pixels (either
+		filled in or just the raw mouse points) and rotate it so that the line of
+		best fit is horizontal. I need to verify that that would be sufficiently
+		invariant. For reflection we can insist on there being more points on the
+		left than the right, or vice versa.
 ** Real Symmetry
 	 If I create a frame seq as in the ramble section, I should be able to draw
 	 the nth frame, and then make changes to it graphically in the editor. Those
