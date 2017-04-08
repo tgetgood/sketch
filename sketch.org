@@ -162,6 +162,10 @@ have an enourmously easier time animating it.
 		best fit is horizontal. I need to verify that that would be sufficiently
 		invariant. For reflection we can insist on there being more points on the
 		left than the right, or vice versa.
+
+		This is a heavily researched problem, see
+		- [ ] [[https://www.cbica.upenn.edu/sbia/papers/331.pdf][General Affine Invariant Image Normalisation]]
+		- [ ] [[http://www.sciencedirect.com/science/article/pii/S0167865504001448][Matching and normalization of affine deformed image from regular moments]]
 ** Real Symmetry
 	 If I create a frame seq as in the ramble section, I should be able to draw
 	 the nth frame, and then make changes to it graphically in the editor. Those
