@@ -1,2 +1,20 @@
 /* some style */
 
+#editor {
+		position: absolute;
+		width: 49%;
+		height: 100%;
+}
+
+#editor .content {
+		height: inherit;
+		overflow: auto;
+}	
+
+#drawing {
+		position: absolute;
+		width: 50%;
+		height: 100%;
+		left: 50%;
+}
+

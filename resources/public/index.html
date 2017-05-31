@@ -4,11 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/style.css" rel="stylesheet" type="text/css">
+    <link href="css/paren-soup-light.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <div id="app">
-			<canvas id="the-canvas"></canvas>
-    </div>
-    <script src="js/compiled/sketch.js" type="text/javascript"></script>
-  </body>
+			<div id="editor" class="paren-soup">
+				<div class="numbers"></div>
+				<div class="content" contenteditable="true">'test</div>
+			</div>
+			<div id="drawing">
+				<canvas id="the-canvas"></canvas>
+			</div>
+		</div>
+		<script src="js/compiled/sketch.js" type="text/javascript"></script>
+	</body>
 </html>
