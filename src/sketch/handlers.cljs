@@ -33,10 +33,6 @@
 
 (defn get-point [e]
   (when-let [p (loc e)]
-    (pp (->> @drawings
-         (map (fn [[k v]] [k (dist v p)]))
-         #_(sort-by second)
-             ))
     (->> @drawings
          (map (fn [[k v]] [k (dist v p)]))
          (sort-by second)
@@ -44,17 +40,22 @@
          first)))
 
 (defn draw-start-handler [e]
-  (swap! drawings assoc (gensym) [(loc e)]))
+  (.preventDefault e)
+  (when-let [p (loc e)]
+    (swap! drawings assoc (gensym) p)))
 
 (defn draw-move-handler [e]
   (when-let [point (get-point e)]
+    (.preventDefault e)
     (let [p (get @drawings point)
           q (loc e)
           t (js/Date.now)]
-      (put! shape-chan (segment p q t))
-      (swap! drawings assoc point q))))
+      (when (and point q)
+        (put! shape-chan (segment p q t))
+        (swap! drawings assoc point q)))))
 
 (defn draw-end-handler [e] 
+  (.preventDefault e)
   (swap! drawings dissoc (get-point e)))
 
 
@@ -74,22 +75,4 @@
   (fn []
     (handle-handlers
      (fn [e f] (.removeEventListener canvas e f)))))
-
-;; (defn- keysets [m]
-;;   (into {} (map (fn [[k v]]
-;;                    (if (set? v)
-;;                      [k v]
-;;                      [k #{v}]))
-;;               m)))
-
-;; (defn- init! [canvas]
-;;   (let [ls (apply merge-with set/union
-;;                   (map keysets active-listener-groups))]
-;;     (doseq [[e fs] ls]
-;;       (doseq [f fs]
-;;         (.addEventListener canvas e f)))
-;;     (fn []
-;;       (doseq [[e fs] ls]
-;;         (doseq [f fs]
-;;           (.removeEventListener canvas e f))))))
 

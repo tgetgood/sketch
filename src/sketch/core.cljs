@@ -3,7 +3,7 @@
             [cljs.pprint :as pp]
             [paren-soup.core :as ps]
             [sketch.handlers :as handlers :refer [init!]]
-            [sketch.util :as u :refer [canvas ctx current-path dts pp]])
+            [sketch.util :as u :refer [canvas ctx current-path pp]])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (enable-console-print!)
@@ -23,7 +23,7 @@
 
 ;; (set! (.-lineWidth ctx) 0.1)
 
-(defmulti draw* dts)
+(defmulti draw* :type)
 
 (defmethod draw* ::bezier
   [[_ {[c1x c1y] ::c1
@@ -33,16 +33,16 @@
   (.moveTo ctx e1x e1y)
   (.bezierCurveTo ctx c1x c1y c2x c2y e2x e2y))
 
-(defmethod draw* ::line
-  [[_ [[x1 y1] [x2 y2]]]]
+(defmethod draw* :s
+  [{[x1 y1] :start [x2 y2] :end}]
   (.moveTo ctx x1 y1)
   (.lineTo ctx x2 y2))
 
-(defmethod draw* ::union
-  [[_ data]]
-  (doall (map draw* data)))
+(defmethod draw* :squiggle
+  [{:keys [segments]}]
+  (doall (map draw* segments)))
 
-(defmethod draw* ::lines
+(defmethod draw* :fg
   [[_ data]]
   ;; TODO: Would it make more sense to have a normalisation preprocessor and
   ;; keep this purely side effectful?
@@ -71,16 +71,22 @@
 ;;
 ;; TODO: Look at how both paren-soup and figwheel manage this.
 
+(defonce draw-state (atom {:type :squiggle :segments []}))
+
 (go-loop []
   (when-let [c (<! handlers/shape-chan)]
-    (ps/append-text!
-     editor
-     (str "\n\n(def shape \n"
-          (with-out-str (pp/pprint c))
-          ")"))
-    (ps/refresh-after-cut-paste! editor)
+    (swap! draw-state update :segments conj c)
     (recur))) 
 
+(defn update-editor! []
+  (pp (with-out-str (pp/pprint @draw-state)))
+  (ps/append-text! editor (with-out-str (pp/pprint @draw-state)))
+  (ps/refresh-after-cut-paste! editor))
+
+(defn update-canvas! []
+  (u/clear!)
+  (draw! @draw-state)
+  )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Page init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
