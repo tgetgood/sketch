@@ -1,15 +1,22 @@
 /* some style */
 
-#editor {
+#left {
 		position: absolute;
 		width: 49%;
 		height: 99%;
 		overflow: hidden;
 }
 
+#editor {
+		width: auto;
+		height: auto;
+		overflow-y: scroll;
+		overflow-x: hidden;
+}
+
 #editor .content {
 		height: inherit;
-		overflow: auto;
+		overflow: hidden;
 }	
 
 #drawing {
