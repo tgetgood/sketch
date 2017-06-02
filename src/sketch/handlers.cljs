@@ -2,10 +2,9 @@
   (:require [cljs.core.async :refer [chan put!]]
             [clojure.set :as set]
             [sketch.affine :refer [dist]]
-            [sketch.util :refer [ctx loc now pp]]))
+            [sketch.util :refer [ctx now pp]]))
 
 (def shape-chan (chan))
-
 
 (def ^:private drawings (atom {}))
 
@@ -15,8 +14,29 @@
    :end l
    :timestamp t})
 
+(defn loc*
+  [e]
+  (when (and (.-clientX e) (.-clientY e))
+    (let [w (quot js/window.innerWidth 2)]
+      [(- (.-clientX e) w) (.-clientY e)])))
+
+;;FIXME: The switch in this multimethod is terrible
+(defmulti loc (fn [e] (subs (.-type e) 0 5)))
+
+(defmethod loc "mouse" [e] (loc* e))
+
+(defmethod loc "touch"
+  [e]
+  (let [ts (.-changedTouches e)]
+    (when (> (.-length ts) 0)
+      (-> ts (aget 0) loc*))))
+
 (defn get-point [e]
-  (let [p (loc e)]
+  (when-let [p (loc e)]
+    (pp (->> @drawings
+         (map (fn [[k v]] [k (dist v p)]))
+         #_(sort-by second)
+             ))
     (->> @drawings
          (map (fn [[k v]] [k (dist v p)]))
          (sort-by second)

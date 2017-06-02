@@ -25,10 +25,6 @@
 (defn pp [x]
   (.log js/console x))
 
-(defn loc [e]
-  (let [w (quot js/window.innerWidth 2)]
-    [(- (.-clientX e) w) (.-clientY e)]))
-
 (defonce current-path (atom [::lines []]))
 
 (def dts
