@@ -64,6 +64,13 @@
   (.stroke ctx)
   (.closePath ctx))
 
+;; canvas <=> ds <=> string code buffer <=> code editor
+;; The string code buffer is important because we want to keep non-functional
+;; code while the user works on it, but we don't want to kill the UI by trying
+;; to read it.
+;;
+;; TODO: Look at how both paren-soup and figwheel manage this.
+
 (go-loop []
   (when-let [c (<! handlers/shape-chan)]
     (ps/append-text!
