@@ -79,20 +79,25 @@
     (recur))) 
 
 (defn update-editor! []
-  (pp (with-out-str (pp/pprint @draw-state)))
-  (ps/append-text! editor (with-out-str (pp/pprint @draw-state)))
-  (ps/refresh-after-cut-paste! editor))
+  (ps/refresh! editor {:text (with-out-str (pp/pprint @draw-state))}))
 
 (defn update-canvas! []
   (u/clear!)
-  (draw! @draw-state)
-  )
+  (draw! @draw-state))
+
+(defn animate! [t]
+  (update-canvas!)
+  (update-editor!)
+  (js/window.requestAnimationFrame
+   animate!))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Page init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defonce started
   (let [stop! (atom (init! canvas))]
+    (js/window.requestAnimationFrame animate!)
     (.log js/console "Restarting hadlers.")
     (defn on-js-reload []
       (@stop!)
