@@ -1,15 +1,20 @@
 (ns sketch.core
-  (:require [paren-soup.core :as ps]
-            [sketch.handlers :as handlers]
-            [sketch.util :as u :refer [ctx current-path dts]]))
+  (:require [cljs.core.async :refer [<!]]
+            [cljs.pprint :as pp]
+            [paren-soup.core :as ps]
+            [sketch.handlers :as handlers :refer [init!]]
+            [sketch.util :as u :refer [canvas ctx current-path dts pp]])
+  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (enable-console-print!)
 
 ;;;;; Paren Soup
 
-(def editor (.getElementById js/document "editor"))
+(def editor-div (.getElementById js/document "editor"))
 
-(ps/init editor (clj->js {}))
+
+(def editor
+  (ps/init editor-div (clj->js {})))
 
 ;;;;; Drawing
 
@@ -59,14 +64,29 @@
   (.stroke ctx)
   (.closePath ctx))
 
+(go-loop []
+  (when-let [c (<! handlers/shape-chan)]
+    (ps/append-text!
+     editor
+     (str "\n\n(def shape \n"
+          (with-out-str (pp/pprint c))
+          ")"))
+    (ps/refresh-after-cut-paste! editor)
+    (recur))) 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Page init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defonce started
-  (handlers/start!))
+  (let [stop! (atom (init! canvas))]
+    (.log js/console "Restarting hadlers.")
+    (defn on-js-reload []
+      (@stop!)
+      (reset! stop! (init! canvas)))))
 
 (defonce canvas-init
   ;; TODO: Why the hell does the canvas get stretched if you try to set its size
   ;; via CSS?
   (u/set-canvas!))
+

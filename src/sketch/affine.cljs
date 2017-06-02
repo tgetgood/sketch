@@ -49,3 +49,10 @@
 (defmethod scale ::lines
   [[_ data] centre z]
   [::lines (map #(scale-p % centre z) data)])
+
+(defn dist
+  "Returns Euclidean distance between two points (in 2D)"
+  [[x1 y1] [x2 y2]]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)]
+    (js/Math.sqrt (+ (* dx dx) (* dy dy)))))

@@ -1,67 +1,75 @@
 (ns sketch.handlers
-  (:require [clojure.set :as set]
-            [sketch.util :refer [canvas ctx current-path loc pp]]))
+  (:require [cljs.core.async :refer [chan put!]]
+            [clojure.set :as set]
+            [sketch.affine :refer [dist]]
+            [sketch.util :refer [ctx loc now pp]]))
 
-(def curve-listeners
-  (let [drawing? (atom false)
-        lp (atom nil)]
-    {"mousedown" (fn [e]
-                   (reset! drawing? true)
-                   (reset! lp (loc e)))
-     "mousemove" (fn [e]
-                   (when @drawing?
-                     (swap! current-path update 1 conj (loc e))
-                     (reset! lp (loc e)) ))
-     "mouseup" (fn [e]
-                 (reset! lp nil)
-                 (reset! drawing? false))}))
+(def shape-chan (chan))
 
 
-(def draw-listeners
-  (let [drawing? (atom false)]
-    {"mousedown" (fn [e]
-                   (pp e)
-                   (pp (loc e))
-                   (reset! drawing? true)
-                   (.beginPath ctx)
-                   (let [[x y] (loc e)]
-                     (.moveTo ctx x y)))
-     "mousemove" (fn [e]
-                   (when @drawing?
-                     (let [[x y] (loc e)]
-                       (.lineTo ctx x y)
-                       (.stroke ctx))))
-     "mouseup" (fn [e]
-                 (.closePath ctx)
-                 (reset! drawing? false))}))
+(def ^:private drawings (atom {}))
+
+(defn segment [prev l t]
+  {:type :s
+   :start prev
+   :end l
+   :timestamp t})
+
+(defn get-point [e]
+  (let [p (loc e)]
+    (->> @drawings
+         (map (fn [[k v]] [k (dist v p)]))
+         (sort-by second)
+         first
+         first)))
+
+(defn draw-start-handler [e]
+  (swap! drawings assoc (gensym) [(loc e)]))
+
+(defn draw-move-handler [e]
+  (when-let [point (get-point e)]
+    (let [p (get @drawings point)
+          q (loc e)
+          t (js/Date.now)]
+      (put! shape-chan (segment p q t))
+      (swap! drawings assoc point q))))
+
+(defn draw-end-handler [e] 
+  (swap! drawings dissoc (get-point e)))
 
 
-(def active-listener-groups
-  [curve-listeners
-   draw-listeners])
+(def draw-events
+  [{:events ["mousedown" "touchstart"] :handler draw-start-handler}
+   {:events ["mousemove" "touchmove"] :handler draw-move-handler}
+   {:events ["mouseup" "touchend"] :handler draw-end-handler}])
 
+(defn handle-handlers [f]
+  (doseq [{:keys [events handler]} draw-events]
+    (doseq [evt events]
+      (f evt handler))))
 
-(defn- keysets [m]
-  (into {} (map (fn [[k v]]
-                   (if (set? v)
-                     [k v]
-                     [k #{v}]))
-              m)))
+(defn init! [canvas]
+  (handle-handlers
+   (fn [e f] (.addEventListener canvas e f)))
+  (fn []
+    (handle-handlers
+     (fn [e f] (.removeEventListener canvas e f)))))
 
-(defn- start* [canvas]
-  (let [ls (apply merge-with set/union
-                  (map keysets active-listener-groups))]
-    (doseq [[e fs] ls]
-      (doseq [f fs]
-        (.addEventListener canvas e f)))
-    (fn []
-      (doseq [[e fs] ls]
-        (doseq [f fs]
-          (.removeEventListener canvas e f))))))
+;; (defn- keysets [m]
+;;   (into {} (map (fn [[k v]]
+;;                    (if (set? v)
+;;                      [k v]
+;;                      [k #{v}]))
+;;               m)))
 
-(defn start! []
-    (let [stop! (atom (start* canvas))]
-    (.log js/console "Restarting hadlers.")
-    (defn on-js-reload []
-      (@stop!)
-      (reset! stop! (start* canvas)))))
+;; (defn- init! [canvas]
+;;   (let [ls (apply merge-with set/union
+;;                   (map keysets active-listener-groups))]
+;;     (doseq [[e fs] ls]
+;;       (doseq [f fs]
+;;         (.addEventListener canvas e f)))
+;;     (fn []
+;;       (doseq [[e fs] ls]
+;;         (doseq [f fs]
+;;           (.removeEventListener canvas e f))))))
+
