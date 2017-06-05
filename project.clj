@@ -13,6 +13,7 @@
                  [org.clojure/tools.namespace "0.2.11"]
                  [incanter "1.5.7"]
                  [paren-soup "2.8.6"]
+                 [cljsjs/codemirror "5.24.0-1"]jk
                  [cljsjs/fabric "1.5.0-0"]]
 
   :plugins [[lein-figwheel "0.5.9"]

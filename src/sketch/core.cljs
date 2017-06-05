@@ -1,7 +1,14 @@
 (ns sketch.core
   (:require [cljs.core.async :refer [<!]]
             [cljs.pprint :as pp]
-            [paren-soup.core :as ps]
+            cljsjs.codemirror
+            cljsjs.codemirror.addon.fold.comment-fold
+            cljsjs.codemirror.addon.fold.brace-fold
+            cljsjs.codemirror.addon.fold.foldcode
+            cljsjs.codemirror.addon.fold.foldgutter
+            cljsjs.codemirror.mode.clojure
+            cljsjs.codemirror.mode.javascript
+            cljsjs.codemirror.keymap.sublime
             [sketch.handlers :as handlers :refer [init!]]
             [sketch.util :as u :refer [canvas ctx current-path pp]])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
@@ -10,11 +17,19 @@
 
 ;;;;; Paren Soup
 
-(def editor-div (.getElementById js/document "editor"))
+(def editor-div (.getElementById js/document "left"))
 
+(defonce editor
+  (js/CodeMirror
+   editor-div
+   (clj->js
+    {"value" ""
+     "mode" "clojure"
+     "readOnly" false
+     "lineNumbers" true
+     "foldGutter" true
+     "gutters" ["CodeMirror-linenumbers" "CodeMirror-foldgutter"]})))
 
-(def editor
-  (ps/init editor-div (clj->js {})))
 
 ;;;;; Drawing
 
@@ -79,17 +94,21 @@
     (recur))) 
 
 (defn update-editor! []
-  (ps/refresh! editor {:text (with-out-str (pp/pprint @draw-state))}))
+  (.setValue (.getDoc editor) (with-out-str (pp/pprint @draw-state)))
+  (.setOption editor "readOnly"))
 
 (defn update-canvas! []
   (u/clear!)
   (draw! @draw-state))
 
-(defn animate! [t]
-  (update-canvas!)
-  (update-editor!)
-  (js/window.requestAnimationFrame
-   animate!))
+(let [last-state (atom nil)]
+  (defn animate! [t]
+    (when (not= @last-state @draw-state)
+      (update-canvas!)
+      ;; (update-editor!)
+      (reset! last-state @draw-state))
+    (js/window.requestAnimationFrame
+     animate!)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Page init
