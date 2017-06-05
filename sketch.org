@@ -1,236 +1,450 @@
 #+TITLE: A Modern Take on Sketchpad
 #+STARTUP:nologdone
 
+Elevator pitch name might be sketchpad meets hypercard. Or 3D printers in space.
+
 This isn't really about Sketchpad. I'm just taking the scope of what Sutherland
 did as inspiration.
 
-The goal is a duality between the input modes of code and sketching on
-canvas. The idea being that if you can see the code your sketch produces, you'll
-have an enourmously easier time animating it.
+* Intentions
 
-* Goals
-** Usability
-	 First and foremost this is intended to be usable by non programmers —
-	 students, artists, etc. — to produce complex visuals and animations.
+	The ultimate goal of this project is to achieve a bidirectional connection
+	between direct drawing and code. Draw a shape and see the code that generates
+	it (or in our case a potentially smoothed version of it). Modify the drawing
+	and the code updates, modify the code and the drawing updates.
 
-	 It needs to support users with no programming ability whatsoever and walk
-	 them progressively by concrete example through more and more complex
-	 constructions.
-** Don't be Processing
-	 In particular try to make everything explicite both in the code and in the
-	 UI. I don't really want to create a complex UI, but that's going to be
-	 necessary I think since we want the barrier to entry to be as low as
-	 possible.
+	The key to the generated code though is that it has to be useful, not just a
+	huge list of line segments. I think it will be a lot easier to describe via a
+	series of example use cases.
 
-	 See (TODO: Remember the name of that essay by Victor and link to it).
-* Implementation
-** Ramble
-	 If I draw a blade of a windmill, I want first and foremost to be able to see
-	 the code that produces it:
+** Examples
+*** Simple line drawing
 
-	 #+BEGIN_SRC clojure
-		 (def G__1
-			 [::lines [[0 100] [110 400] [230 200]]])
-	 #+END_SRC
+		 Say I draw a rough circle. It isn't useful if the software captures it as a
+		 series of points or the line segments connecting them — which is how canvas
+		 and as far as I can tell most other drawing tools do it — we want to
+		 capture the fact that it's a circle, or approximately a circle.
 
-	 The representation doesn't matter at the moment[fn:1], I just want a name for what
-	 I just drew. The becomes especially important when shapes are viewed relative
-	 to each other
+		 Of course we should keep the raw data the user entered, but we should also
+		 try to fit higher level building blocks to the user input. If the user
+		 entered a near circle, we should infer or prompt "did you really want a
+		 circle?".
 
-	 What I need to be able to see to build a complex drawing is how my changes in
-	 the GUI effect the code. If I know that copying a shape, rotating, and moving
-	 it generates the code:
+		 Taking this to the logical extreme we should have sliders controlling how
+		 much smoothing the computer adds to the curve. The essential tradeoff is
+		 between fidelity to the original drawing and simplicity of representation,
+		 where simplicity is defined as a small number of "natural shapes"; things
+		 like lines, arcs, bezier curves, and other drawings that the user
+		 — or potentially other users — have entered in the past.
 
-	 #+BEGIN_SRC clojure
-		 (def G__2
-			 (->> G__1
-						(translate [0 10])
-						(rotate 35)))
-	 #+END_SRC
+*** Abstracted shapes
 
-	 Then I can infer that to build a four blade turbine I need to:
+		 Say I draw a picture of a flower. In the past the computer has seen rose curves
+		 and recognises the petals as such. Ideally it would break my picture down into
+		 pieces and link those pieces to the known curves. Of course I might not care
+		 about that breakdown, so there should be an easy way to ignore it.
 
-	 #+BEGIN_SRC clojure
-		 (def turbine4
-			 (combine
-				[G__1
-				 (->> G__1
-							(translate [0 10])
-							(rotate 90))
-				 (->> G__1
-							(translate [0 10])
-							(rotate 180))
-				 (->> G__1
-							(translate [0 10])
-							(rotate 270))]))
-	 #+END_SRC
+		 Recognising that the petals are all variations on the same shape, the computer
+		 should offer to make them all the same spaced and rotated in a radially
+		 symmetric pattern — here we need to recognise near radial symmetry. That might
+		 not be what you want though, maybe you want the slight imperfections and
+		 variations, but you do want them evenly spaced.
 
-	 A more advanced user should of course be able to see that there is a more
-	 general and simpler solution to this problem:
+*** Generated Drawings
 
-	 #+BEGIN_SRC clojure
-		 (defn rot-blade [a]
-			 (->> G__1
-						(translate [0 10])
-						(rotate a)))
+		Say I draw something, copy it and move it over and shrink it, and then do
+		that again, and again, and I want to keep it going ad infinitum. If I do it
+		manually a couple of times, I should see code akin to
 
-		 (defn turbine [n]
-			 (combine
-				(->> (range 0 360)
-						 (filter #(= 0 (mod % (quot 360 n))))
-						 rot-blade)))
-	 #+END_SRC
+		#+BEGIN_SRC clojure
+			(def shape {...})
 
-	 Now that you have a turbine, you want it to spin. You should infer
-	 (correctly!) that calling rotate on the combined turbine will cause the
-	 entire thing to spin as you would expect. So it shouldn't be a stretch to
-	 infer that the sequence of frames you want in your animation should be:
+			(def picture
+				(compose
+				 (-> shape (move :right 2) (scale 0.5))
+				 (-> shape (move :right 3.1) (scale 0.27))
+				 (-> shape (move :right 3.6) (scale 0.125))))
 
-	 #+BEGIN_SRC clojure
-		 (->> (range)
-					(filter #(= 0 (mod % 30)))
-					(map #(rotate % (turbine 4))))
-	 #+END_SRC
+		#+END_SRC
 
-	 In principle all you should then need to do is pass that to an `animate` fn.
+		Which I would then have to manually transform into a map over ranges to
+		create my infinite regression.
 
-	 Of course we have an obstacle to get over teaching users to think of ranges
-	 and conprehensions as animations. Some simple renaming might be enough to
-	 make it substantially easier.
+		Aside: If we render lazily — by just aborting the render if the thing to be
+		rendered can't be bigger than a pixel — then we can easily accomodate
+		fractal and other lazily infinite drawings. I think that would be very
+		valuable, but let's see how that fits into the bigger picture.
 
-	 I think that sequences (potentially infinite) of frames are more intuitive to
-	 people who draw — probably to all non programmers — than mutable
-	 canvases. Think Renaissance flip books.
+		Better would be if the computer generated a transducer and specific data
+		examples to fit in. Something like:
 
-** Considerations
-*** Plain ol Cartesian coordinates
-		Why is the origin the top left in most graphics programs? Because it was
-		easier to implement that way in some particular application or architecture
-		and it's just been stuck that way ever since.
-*** Looping Like Sonic Pi?
-		Given that animation loops are going to execute infinitely in the general
-		case — which I expect to be the norm — there will need to be a mechanism in
-		place to kill it.
+		#+BEGIN_SRC clojure
+			(def shape ...)
 
-		I think it would be best if the `draw` and `animate` fns, when called, clear
-		all current drawings and animations. This will force the user to build
-		complex animations by composing frames rather than thinking imperatively of
-		many frames at once. And having to keep track of threads of animation.
-*** Affine TXs
-		What's the most intuitive way to represent affine transformations?
-		Defninitely not translate to the origin, rotate, and translate back.
+			(def no-auto-name
+				(map (fn [affinetx]
+							 (affine-transform shape affinetx))))
 
-		Every picture should be in it's own normalised form at its own origin,
-		compound pictures should be expressed as unions of affine transforms of
-		normalised sub pictures. That's the best way I can think of to make my
-		pseudo API a reality in any case.
-**** Questions
-***** Around what do we rotate?
-			Logical options are a corner of a bounding box, centre of bounding box, or
-			ortocentre of the points in the drawing.
+			(def picture
+				(transduce no-auto-name compose [atx1 atx2 atx3]))
+		#+END_SRC
 
-			The centre of the bounding box seems the most logical to me, but if we
-			truly want to be general, a rotation should take both a centre and an
-			angle. Making the UI reflect that would be trivial.
-*** Normalisation
-		From the user's point of view, shapes will be either atomic drawings, or
-		transformations and compositions of other shapes, but internally this won't
-		do.
+		Would this acutally be better? Think accessibility, it should be a simple
+		matter of changing a sequence of [0.5 0.26 0.124] into (map #(2**-%) (range
+		2)) and a sequence of [2 3 3.5] into (map #(inc (reduce + %)) (map #(2**-%)
+		(map #(take % (range)) (range)))).
 
-		I'd like to internally represent drawings as pure data. One way to
-		accomplish this would be bitmaps, which are data after all. That would throw
-		away a lot of structure though. Remember that a long term goal it to
-		automatically recognise when you've drawn something that's almost identical
-		to something else — like a not quite straight line, or an off square — and
-		suggest fixing it for you. The whole slider that lets the user trade off
-		between fidelity of what they drew and simplicity of representation (which
-		roughly corresponds to "correctness" or "niceness" of the drawing).
+		That's nothing approaching simple. The concept is so much simpler;
+		successive halves and triangular numbers. Why is it so hard to express
+		simple geometric math in code? What can we do about that?
 
-		To this end, some sort of picture normal form is needed. If we relax pixel
-		coordinates to be doubles, we can map any shape onto the unit square [0, 1]
-		X [0, 1] and store those pixels along with the inverse affine transform. The
-		affine transform functions would then act on the affine offset, not on the
-		pixels themselves.
+*** Linking to Real Data
 
-		So now we need a canonical order of applying the affine offset info
-		(they're noncommutative) but that's easy enough. We have time to look for
-		simpler solutions though and should.
+		If I want to draw a link graph inforgraphic, I want to draw a couple of
+		circles with lines connecting them, then I want to connect the radii and
+		colours of the circles and the length or width or colour of the lines to the
+		data. There should be a quick interface to accomplish this. Something like
+		the IDE that Victor talks about in that mario talk that inspired
+		lighttable. Of course that IDE was faked, but the ideas are great.
 
-		We also need a canonical value for rotation and reflection. The first idea
-		that comes to mind is to take the line of best fit of the pixels (either
-		filled in or just the raw mouse points) and rotate it so that the line of
-		best fit is horizontal. I need to verify that that would be sufficiently
-		invariant. For reflection we can insist on there being more points on the
-		left than the right, or vice versa.
+		Furthermore to make inforgraphics really useful, we want to be able to
+		dynamically modify them as the underlying data or context changes. I'm not
+		keen to take on the kind of stuff D3 does, but it is a great solution to
+		that problem. Since we're using canvas and not SVG, maybe we can simplify it
+		by making everything explicitely immediate mode. No screen state at all. One
+		of the hardest problems for me when learning to program games in highschool
+		was keeping the game state and the screen state in sync. I ended up wiping
+		the screen on every frame because I couldn't deal with it, thus reinventing
+		the immediate mode (my games were stuttery and slow, but those 80486s didn't
+		have GPUs).
 
-		This is a heavily researched problem, see
-		- [ ] [[https://www.cbica.upenn.edu/sbia/papers/331.pdf][General Affine Invariant Image Normalisation]]
-		- [ ] [[http://www.sciencedirect.com/science/article/pii/S0167865504001448][Matching and normalization of affine deformed image from regular moments]]
-** Real Symmetry
-	 If I create a frame seq as in the ramble section, I should be able to draw
-	 the nth frame, and then make changes to it graphically in the editor. Those
-	 changes should be reflected in the code.
+*** Reacting to the User
 
-	 Stumbling block: presumably you don't edit individual frames of an animation,
-	 generally speaking, so how should the editor work visual continuity into the
-	 picture? I don't have any ideas about this atthe moment, so it's probably
-	 best if we just make the user deal with the animations frame by frame at
-	 first. I thnk that animators might be used to that. At least as a starting
-	 point it's okay.
-** UI Considerations
-*** Objects
-		The way I'm currently thinking about the tool, you'll be able to draw
-		individual shapes — maybe every time you hit enter or the space bar it takes
-		everything you've drawn and names it as one thing; later on we can worry
-		about automatically recognising subparts.
+		Would it be too off topic to use such a tool to create rudimentary UIs?
+		After all most UIs are just infographics with mostly detrimental
+		interaction.
 
-		So how do we worry about the master-instance dichotomy? Really if compound
-		drawings are made up of unions affine txs of other drawings, then simply
-		replacing the seed var in the pipelines will let us act like we changed a
-		master without mutating the master itself.
+** Purpose
 
-		So we need several things:
+	 Of course the most interesting task here is making the computer abstract
+	 input and break it down into things it recognises and can then reassemble
+	 into the drawing you gave it. In my opinion this is a task that requires real
+	 visual intelligence, but I don't think it's too much to approach.
 
-		We need a way to take a canvas, pick out one item from it and enter an
-		editing more for just that item.
+** Things to try
 
-		When you edit a shape, you should by default be making a new shape derived
-		from the old one. These chains of derivation can get arbitrarily long and
-		that's part of the power. But at the same time you often want to replace the
-		shape you chose with the edited version within the context of the drawing
-		that you're making and that should be easily done if not the default. But
-		then what happens at the top level? Do we need to worry about keeping a
-		sketchbook?
+	An interesting first experiment would be to try and map hand drawing to
+	B-splines. Symmetry and smoothness can be parameters adjustable by the user.
 
-		We need an intuitive way to replace all instances of shape S in drawing D
-		with some other shape S'. Syntactically this is just refactoring, so we need
-		something IDE-like, but what the hell does this mean graphically?
+	Simpler and also interesting would be to give the computer a primitive vocab
+	of built in canvas directives and come up with a search algorithm to try and
+	fit those to whatever you draw. This could actually turn out to be a harder
+	but more interesting problem.
 
+** Names
+	 - Pallas
+	 - Athene
+	 - Triton
+
+* Research
+** Notes from Sutherland
+	 Mostly almost cliched advice now, but the fact he came to all these
+	 conclusions basically de novo is incredible.
+
+*** Generic structures are critical
+	 Everything was kept in a single ring buffer. A big reason why this was a
+	 win was that it allowed him to implement a basic form of automatic garbage
+	 collection. But it also minimises unnecessary encapsulation. Relates to
+	 Kay's insistence on dynamic inspectability of *everything*.
+
+*** Separate generic functions from those specific to individual shapes / operations
+	 You have to keep in mind that this was a decade before Kay said OO. Maybe
+	 by now this observations is less profound.
+
+*** Unlimited Applicability of generic operators.
+	 If anything can do X try to let everything do X.
+
+	 This relates back to the previous point, but encourages one to make as much
+	 generic as possible. Similar philosophy to Clojure's data abstractions. Also
+	 has a strong similarity to the idea of natural transformations as fully
+	 parametrically polymorphic functions.
+
+*** Hierarchy of shapes
+	 Something that processing makes unduly difficult is shape composition. Say
+	 I've drawn a nice flower petal and I want to copy and rotate it 30 degrees
+	 12 times and save the new thing. I now have a flower. Suppose I now want to
+	 modify the basic petal from which the flower is made. In most modern
+	 drawing languages I'd have to rebuild the compound shape after modifying
+	 the base part, but in sketchpad IS tracked the relations between shapes so
+	 that modifying the petal modifies anything built from the petal.
+
+	 Kay says that this instance-master relation is just the object-class
+	 relation of "real" OO. But there's something more, the instances dynamically
+	 track changes to the masters and compound shapes are created almost
+	 algebraically from instances (thus forming new masters from instances). This
+	 seems like a blending of Hindley-Milner style type algebra combined with
+	 prototypical inhertance of types.
+
+** Notes from Victor
+
+	 Interactive analog widgets to control model parameters should be embedded as
+	 close to the data they modify as possible. This means that upon clicking a
+	 curve you should access sliders controlling symmetry and smoothness
+	 enhancements, colour picker, labels, and anything else that pertains to that
+	 particular shape.
+
+	 Aside: Magic ink is not about what I recall at all. It's really an essay
+	 about how design focused on interaction and data entry is destructive to
+	 usability. That's the lesson that we learned the hard way at Semion. The way
+	 he introduces the topic causes a bit of a gut defensive reaction in me just
+	 because he's very absolute and general about it. The widest scope of his
+	 claims are untennable, but in reality his examples come from a much smaller
+	 space in which his claims are obviously and powerfully true.
+
+	 I wish I had given the essay more credit and brought it to the table three
+	 years ago.
+
+	 [[http://worrydream.com/#!/LearnableProgramming][This]] is the essay I was thinking of, it seems. [[http://worrydream.com/#!2/LadderOfAbstraction][Up and Down the Ladder of
+	 Abstraction]] is also a good one.
+
+** Readings / references
+** [[http://www.red3d.com/cwr/papers/1982/ASAS82.html]]
+** [[http://hillside.net/plop/2006/Papers/Library/interactive_informationgrap.pdf][Towards a Pattern Language for Interactive Information Graphics]]
+** [[https://en.wikipedia.org/wiki/Cognitive_dimensions_of_notations]]
+
+
+** Tools to use (or just steal from)
+ - [[https://github.com/ztellman/penumbra]]
+ - http://exupero.org/hazard/post/fractals/
+ - [[http://perfectionkills.com/exploring-canvas-drawing-techniques/][drawing tools]]
+
+** AI and RL
+	 - [[http://soar.eecs.umich.edu/][Soar]]
+		 It sounds rather vain and premature to design a framework for intelligence
+		 without any useful definition of intelligence, but there's almost certainly
+		 useful stuff here.
+
+		 Fuck that. This is basically machine code. People are so concerned with
+		 speed nowadays that they're willing to make the job 1000x harder just so
+		 that it's 100x faster. Compute time is cheap, I'm not doing that.
+
+	 - [[http://www.princeton.edu/~ndaw/d11a.pdf][Phasic Dopamine System and TD learning]]
+
+	 - Chunking
+		 - [[https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4138363/][Chunking performance seems independent of conscious attention]]
+			 In motor skills.
+		 - [[http://www.psych.utoronto.ca/users/peterson/psy430s2001/Miller%20GA%20Magical%20Seven%20Psych%20Review%201955.pdf][Miller's Basic Results]]
+		 - [[http://www.bcp.psych.ualberta.ca/~mike/Pearl_Street/PSYCO354/pdfstuff/Readings/Gobet1.pdf][Chunking in Human Learning]]
+		 - [[https://en.wikipedia.org/wiki/EPAM][EPAM]]
+		 - [[http://chrest.info/][CHREST]]
+	 - Other models of learning
+		 - [[https://en.wikipedia.org/wiki/Adaptive_resonance_theory][Adaptive Resonance Theory]]
+		 - [[https://en.wikipedia.org/wiki/Self-organizing_map][Kohonen Networks]]
+
+* A Bigger Picture
+** From Drawing to Programming
+
+	The essential idea here is to replace the explicit programming of shapes with
+	the ability to drawn and *see* what the computer interprets your drawing as.
+
+	Given sufficient control to manipulate the drawings after the computer
+	interprets them, this could be a useful drawing tool in itself, but would
+	most likely just be a toy.
+
+	If you can link data into your drawing, then you can create data graphics in
+	something akin to the fashion of drawing.
+
+	Beyond that, what if you can link in arbitrary logic? Can you create a
+	programming environment based on visual and spatial feedback?
+
+	In short I'm leaning towards making this into a UI building tool. A way to
+	hand draw mockups and turn them into a working program all at once.
+
+	Would it be possible to separate the data, the interaction, and the visual
+	representation sufficiently to make porting this over to an existing cljs or
+	js program less painful. Can the designer's work be used for production
+	engineering?
+
+	Rather than writing another hundred UIs, I'd rather make rails.
+
+	I needed to remind myself how this fits into the grand scheme of the
+	document. It really is about new and broader forms of computer programming. I
+	think we need to move away from interaction and towards communication.
+
+	But why stop at UIs? There are concepts that are easier to express visually or
+	geometricall that symbolically / logically. There are also things that are
+	easier to express haptically — imagine trying to learn gymnastics from a book
+	— but that's another topic.
+
+	If as Hadamard proposed genius is the ability to think in multiple modes at
+	once, then we need to find new modes of interaction with computers.
+
+** Rough Stages
+*** Pictures <=> Code
+*** Data Driven Drawings
+		A la D3
+*** Data Driven Apps
+		Domain Data => UI spec (data) => Data display
+*** Interactivity
+		This is late in the game for a reason. Read [[http://worrydream.com/#!/MagicInk][magic ink]]. It's an extreme
+		opinion, and I think we will need interactivity eventually, but we can and
+		should get pretty damned far without.
+*** Visual Abstraction
+		If you're drawing something similar to something else you or someone else
+		has drawn in the past then the system should recognise that and use it to
+		simplify the picture. It should also be able to smooth out pictures by
+		recognising that you've drawn an almost-square.
 * Notes
-** [2017-04-07 Fri 13:01]
-	 Some of the basic editing commands will need to be macros, and I want them to
-	 be evaluted from the browser, so I'll need to fully bootstrap cljs.
-* Devlog
-** Outstanding
-*** DONE Affine Transforms [3/3]
-		Keep in mind that rotations and scaling all happen about a point. Make that
-		point explicit.
-		- [X] Rotation about a point
-		- [X] Translation
-		- [X] Scale
-*** TODO New coords
-		(0, 0) is the bottom left corner in every math class I've ever heard
-		of. It's how basically all graphs do are set and it's how Descartes did
-		it. Who the fuck switched it to the top left?
-*** TODO Touch events
-		Currently canvas events are only implemented for mouse events. Should use
-		hammer or whatever is cooler nowadays to get the rest. Probably easier to
-		just do it myself though.
-*** TODO Dump code for drawing to console
-		Temporary workaround until we set up the editor in the browser.
-*** TODO Set up repl in the browser
-		We want to be able to draw with code directly in the browser.
-* Footnotes
+** [2017-05-31 Wed 13:05]
+	 Had an idea this morning that we may want to randomly generate pictures, but
+	 if we do that then the artist probably won't want the picture to change every
+	 time you look at it. This fits into my rejection of randomness as
+	 nondeterminism pretty cleanly: randomness is just arbitraryness — "I don't
+	 care", not "god plays dice" — so anything random should explicitely have the
+	 seed set as part of the datastructure so that it's deterministic but not
+	 predetermined. 
+** [2017-06-01 Thu 20:35]
+	 We need a composable representation of shapes. I'm starting to think that we
+	 should go back to the old idea of representing basic squiggles as normalised
+	 images with baked in affine transforms. But then what is the shape itself?
+	 
+	 How do we represent the link from master to instance?
 
-[fn:1] And of course you need to be able to change the name and have the editor
-handle the change properly.
+	 How do we represent the link from master to master?
+
+	 How do we transition an instance from one master to another?
+	 
+	 How do we prevent the proliferation of (unneeded) shapes?
+** [2017-06-01 Thu 20:58]
+	 God, why am I spending so much time dealing with damned handlers? You'd think
+	 this would be easy by now.
+	 
+	 I can simplify my data model to make the input handling trivial, but is that
+	 really the way to do it? In general no, but in this case I think treating
+	 each individual mouse movement separately might in fact be a better solution.
+	 
+	 Even if I change the data model, I still need some way to extend to multiple
+	 types of events.
+	 
+	 I also want to be able to draw with two fingers at once. What's the point of
+	 a touch screen if you can only use it as a glorified mouse?
+** [2017-06-04 Sun 10:42]
+	 For normal people cartesian coordinates have the origin in the bottom
+	 left. CRTs and memory mapping made it easier to put it in the top left but
+	 that's no longer relvant. Honestly Descartes' choices were arbitrary as well,
+	 but they were based on visual biases that humans still have, so they're still
+	 relevant at least.
+
+	 [[https://processing.org/tutorials/drawing/][This]] is wrong. Instead of writing a little code to make the computer do what
+	 humans expect it to, they wrote a page to reeducate humans to do what's
+	 easiest for the computer.
+	 
+	 TODO: Look into other coordinate systems and see if they might make more
+	 sense to untrained people.
+** [2017-06-04 Sun 10:47]
+	 I've got to ditch the editor and just use a textarea for now. I've only
+	 looked at two editors, but they both choke on large amounts of code when I
+	 try to use them in an immediate fashion. I'm not interested in maintaining a
+	 pair of parsetrees and mapping diffs between them. React can do that for me.
+	 
+	 But for now forget highlighting and the rest of the editor nonsense. Let's
+	 just get the code mapping working.
+** [2017-06-05 Mon 10:05]
+	 Check out https://github.com/viebel/klipse for an editor.
+* Implementation
+** Things to do
+*** Algorithmic First Steps
+**** DONE Capture brush strokes on canvas
+**** DONE Create a Primitive Language
+		 Take cavas' path primitives and wrap them up so that we can compose them at
+		 will.
+
+		 Note: [2017-03-13 Mon 14:24] This is acutally pretty simple. Or at least
+		 what I've chosen to start is. Use Bezier curves for the low level
+		 representation and then create an open ended set of higher level
+		 abstractions starting with line and circle.
+*** UI
+**** TODO Widgets to control smoothness and symmetry
+**** TODO Basic Code Editor
+		 This isn't super high priority since we can probably just sync with emacs
+		 through a file buffer for initial development.
+
+		 N.B.: There are already some pretty nice browser based cljs editors. Don't
+		 make your own. Not until you have to.
+*** Advanced
+		Read "not doing for now". These things are more a part of Triton.
+**** TODO Search Algorithm
+		 Using the metric we should be able to come up with an A* style algo to find
+		 good fits.
+**** TODO Tweakable fit parameters
+		 This is important because we don't want to research from scratch as the
+		 smoothness tolerance increases / decreases. Maybe everything will be so
+		 fast that this won't matter, but my intuition is that the search should be
+		 as dynamic (cachable) as possible.
+**** TODO Implement a metric for curve matching [50%]
+		 Average pixel difference between curves? Average square distance? We'll
+		 have to experiment and take runtime into account, this is going to be run a
+		 lot.
+
+		 What if we just XOR the bitmaps and count the black pixels? That sounds
+		 fast.
+
+		 I think these are the only 2 approaches
+		 1. For each pixel in C1 find the closest pixel in C2 and average over all of
+				C1 (what average?)
+		 2. Render the curves to (a fake) screen and compare the bitmaps.
+
+		The first will probably be more accurate since it's a genuine metric on the
+		space of piecewise continuous curves in R2, but it's a lot of work
+
+		[[http://jpfop.sourceforge.net/jaxml-batik/html-docs/test.html][These guys]] take the second approach. They're creating SVGs to match pngs,
+		which is pretty similar to what I'm going for. But they expect near pixel
+		perfect accuracy. I'm looking to idealise the shapes somewhat.
+
+***** DONE Choose approach
+			Note: [2017-03-13 Mon 14:32]
+			The first approach is cubic in the length of the curve and involves some
+			difficult discrete math (probably not for a discrete math guy, but I'm an
+			analyst). The second should run linear in the number of pixels on the
+			screen (which for big curves should be less than the length of the curve
+			squared) and I think I can do it quickly to test.
+
+			A quick test is always a good choice.
+***** TODO Render bezier path to hidden canvas
+***** DONE Get bitmap (as data) from canvas
+***** TODO Compare curves
+** Phase 2
+	 The project focus is shifting to be more about the new medium and less
+	 immediately about the AI ideas. I think that's for the best.
+*** Tasks
+**** TODO Clean up previous demos
+		 The code is in such a terrible state right now. Experiments left for two
+		 months... Time to clean it up and document it so that I don't have to start
+		 from scratch a third time!
+**** TODO Capture drawn figures as code
+**** TODO Examine how paren-soup and figwheel deal with broken code
+		 We can't go trying to load code that doesn't read. 
+**** TODO Demote Editing
+		 It's taking up too much time and not as important as the generating code
+		 for shapes. Just use a textarea for now and I'll get what I need for a
+		 proof of concept.
+**** TODO Work out drawing flow
+		 This is a tricky one. We want a single "drawing" to be atomic in the code,
+		 but we want to be able to derive pictures from others, etc.. Maybe
+		 something along the lines of undo chunking would be appropriate?
+**** TODO Fix Coordinate System
+		 Origin in the bottom left.
+**** TODO Master - Instance Logic
+		 Sketchpad had it right in allowing objects to be instances of a master
+		 object so that editing the master would change all occurences in the
+		 compound product.
+
+		 There's a mutability problem here though. I think what we want is a
+		 prototypical inheritance system where you can create new templates from old
+		 ones and where you can instantiate templates. Templates shouldn't change
+		 though lest editing one picture change another. Instead you need a way take
+		 some set of instances of a template and link them to a new template at will
+		 so that we have a localised version of this master-instance editing style.
+
+		 This is conceptually similar to Clojure's core principles: instances should
+		 be mutable references to immuatable data.
