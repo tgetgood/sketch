@@ -351,6 +351,12 @@ did as inspiration.
 	 just get the code mapping working.
 ** [2017-06-05 Mon 10:05]
 	 Check out https://github.com/viebel/klipse for an editor.
+** [2017-06-05 Mon 11:34]
+	 The code evaluation is a huge security hole right now. I'm going to need to
+	 work up a parser and sanitiser scheme. At least I get to learn something new.
+** [2017-06-05 Mon 12:28]
+	 The re-frame lein template app has google closure config flags setup. That
+	 will be handy.
 * Implementation
 ** Things to do
 *** Algorithmic First Steps
@@ -428,6 +434,8 @@ did as inspiration.
 		 It's taking up too much time and not as important as the generating code
 		 for shapes. Just use a textarea for now and I'll get what I need for a
 		 proof of concept.
+***** TODO BUG: when code in textarea reformats, we lose the cursor.
+			That makes editing code very difficult.
 **** TODO Work out drawing flow
 		 This is a tricky one. We want a single "drawing" to be atomic in the code,
 		 but we want to be able to derive pictures from others, etc.. Maybe
@@ -448,3 +456,19 @@ did as inspiration.
 
 		 This is conceptually similar to Clojure's core principles: instances should
 		 be mutable references to immuatable data.
+**** TODO Security
+		 Evalling raw code is a horrendous security hole. Don't do it.
+
+		 Thought: This is intended as an end user application. No server, no page so
+		 to speak. Any programming environment is a huge security risk: if you
+		 compile and run code you copied off the internet without understanding it
+		 you're in trouble. Of course that's a cop out. At least we have the browser
+		 to protect you from most things...
+		 
+		 This needs serious thought. Most programmers don't do the right thing most
+		 of the time, so obviously if we want non-programmers to use this we have to
+		 figure out a security model that works by itself most of the time.
+		 
+		 Kay said that the browser should be part of the kernel if you really want
+		 complete freedom with decent safety. I've never really considered kernel
+		 programming.
