@@ -2,31 +2,27 @@
   (:require [cljs.core.async :refer [<!]]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
-            re-frame.registrar
             sketch.state
-            sketch.canvas)
+            [sketch.canvas :as canvas])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (enable-console-print!)
-
-(re-frame/reg-fx
- :redraw-canvas
- (fn [image]
-   {}))
-
 
 (re-frame/reg-event-db
  :code-edit
  (fn [_ _]
    (js/alert "asd")))
 
+
 (def canvas-events
   [[[:on-mouse-down :on-touch-start] [:draw-start]]
    [[:on-mouse-move :on-touch-move] [:draw-move]]
-   [[:on-mouse-up :on-touch-end] [:draw-end]]])
+   [[:on-mouse-up :on-touch-end :on-mouse-out :on-mouse-leave] [:draw-end]]])
+
 
 (def editor-events
   [[[:on-input] [:code-edit]]])
+
 
 (defn event-map [m]
   (into
@@ -40,26 +36,33 @@
                ks))
            m)))
 
-(defn dummy []
-  (let [v @(re-frame/subscribe [:drawn-canvas])]
+
+(defn canvas-panel []
+  (reagent/create-class
+   {:component-did-mount
+    #(re-frame/dispatch [:resize-canvas])
+    :reagent-render
     (fn []
-      (into [] (cons :div (doall (map (fn [x] [:div x]) v)))))))
+      [:canvas (assoc (event-map canvas-events) :id "the-canvas")])}))
+
 
 (defn main-panel []
   [:div
    [:textarea (assoc (event-map editor-events) :id "editor")]
-   [:canvas (assoc (event-map canvas-events) :id "the-canvas")]
-   [dummy]])
+   [canvas-panel]])
+
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
   (reagent/render [main-panel]
                   (.getElementById js/document "app")))
 
+
 (defn ^:export init []
   (re-frame/dispatch-sync [:init-db])
   #_(dev-setup)
   (mount-root))
+
 
 (defn on-js-reload []
   )

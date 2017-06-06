@@ -2,24 +2,26 @@
   (:require [re-frame.core :as re-frame]
             [sketch.affine :refer [dist]]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Ugly canvas stuff
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn canvas []
   (.getElementById js/document "the-canvas"))
 
-(defn ctx []
+(defn get-ctx []
   (when-let [canvas (canvas)]
     (.getContext canvas "2d")))
 
-(def width (quot js/window.innerWidth 2))
-(def height (.-innerHeight js/window))
+(defn width [] (quot js/window.innerWidth 2))
+(defn height [] (.-innerHeight js/window))
 
-(defn set-canvas! []
-  (set! (.-width canvas) width)
-  (set! (.-height canvas) height))
+(defn set-canvas-size! []
+  (set! (.-width (canvas)) (- (width) 10))
+  (set! (.-height (canvas)) (- (height) 10)))
 
 (defn clear! []
-  (.clearRect (ctx) 0 0 width height))
+  (.clearRect (get-ctx) 0 0 (width) (height)))
 
 (defn loc*
   [e]
@@ -42,7 +44,9 @@
          first
          first)))
 
+
 ;;;;; Shapes
+
 
 ;; TODO: revisit the drawing schema
 (defn segment [prev l t]
@@ -51,37 +55,9 @@
    :end l
    :timestamp t})
 
-;;;;; Touch / Click Handlers
-
-(re-frame/reg-event-db
- :draw-start
- (fn [db [_ e]]
-   (if-let [p (loc e)]
-     (update db :active-pointers assoc (gensym) p)
-     db)))
-
-(re-frame/reg-event-db
- :draw-move
- (fn [{:keys [active-pointers] :as db} [_ e]]
-   (if-let [point (get-point active-pointers e)]
-     (let [p (get active-pointers point)
-          q (loc e)
-          t (js/Date.now)]
-       (.log js/console (-> db :drawing :segments count))
-       (if (and point q)
-        (-> db
-            (update :active-pointers assoc point q)
-            (update-in [:drawing :segments]
-                       conj (segment p q t)))
-        db)))
-   db))
-
-(re-frame/reg-event-db
- :draw-end
- (fn [{:keys [active-pointers] :as db} [_ e]]
-   (update db :active-pointers dissoc (get-point active-pointers e))))
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Drawing on canvas
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def empty-canvas {:type :squiggle :segments []})
 
@@ -92,13 +68,13 @@
        [c2x c2y] ::c2
        [e1x e1y] ::e1
        [e2x e2y] ::e2}]]
-  (.moveTo (ctx) e1x e1y)
-  (.bezierCurveTo (ctx) c1x c1y c2x c2y e2x e2y))
+  (.moveTo (get-ctx) e1x e1y)
+  (.bezierCurveTo (get-ctx) c1x c1y c2x c2y e2x e2y))
 
 (defmethod draw* :s
   [{[x1 y1] :start [x2 y2] :end}]
-  (.moveTo (ctx) x1 y1)
-  (.lineTo (ctx) x2 y2))
+  (.moveTo (get-ctx) x1 y1)
+  (.lineTo (get-ctx) x2 y2))
 
 (defmethod draw* :squiggle
   [{:keys [segments]}]
@@ -108,7 +84,7 @@
   [[_ data]]
   ;; TODO: Would it make more sense to have a normalisation preprocessor and
   ;; keep this purely side effectful?
-  (draw* 
+  (draw*
    [::union
     (mapv (fn [p q] [::line [p q]]) data (rest data))]))
 
@@ -126,17 +102,64 @@
   (.stroke ctx)
   (.closePath ctx))
 
-(re-frame/reg-sub
- :drawing
- (fn [db _]
-   (.log js/console db)
-   (:drawing db)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Event Handlers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(re-frame/reg-sub
- :drawn-canvas
- (fn [_ _] (re-frame/subscribe [:drawing]))
- (fn [drawing _]
-   (.log js/console drawing)
-   (when-let [c (ctx)]
-     (draw! ctx drawing))
-   (:segments drawing)))
+(re-frame/reg-event-db
+ :draw-start
+ (fn [db [_ e]]
+   (if-let [p (loc e)]
+     (update db :active-pointers assoc (gensym) p)
+     db)))
+
+(re-frame/reg-event-fx
+ :draw-move
+ (fn [{{:keys [active-pointers drawing] :as db} :db
+       [_ e] :event}]
+   ;; FIXME: This code is unclear I think, but I think it's better and less
+   ;; brittle than trying to find all of the failure points and sticking in
+   ;; branching logic.
+   ;;
+   ;; Maybe it would be best to make a middleware that treats a {:db nil} effect
+   ;; as a no-op?
+   (or
+    (when-let [point (get-point active-pointers e)]
+      (let [p (get active-pointers point)
+            q (loc e)
+            t (js/Date.now)
+            drawing (update (:drawing db)
+                            :segments conj (segment p q t))]
+        (when (and point q)
+          {:db (-> db
+                   (assoc :drawing drawing)
+                   (update :active-pointers assoc point q))
+           :redraw-canvas drawing})))
+    {:db db})))
+
+(re-frame/reg-event-db
+ :draw-end
+ (fn [{:keys [active-pointers] :as db} [_ e]]
+   (update db :active-pointers dissoc (get-point active-pointers e))))
+
+(re-frame/reg-event-fx
+ :resize-canvas
+ (fn [_]
+   {:resize-canvas! true}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Effects
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(re-frame/reg-fx
+ :redraw-canvas
+ (fn [drawing]
+   (when-let [ctx (get-ctx)]
+     (clear!)
+     (draw! ctx drawing))))
+
+
+(re-frame/reg-fx
+ :resize-canvas!
+ (fn [_]
+   (set-canvas-size!)))
