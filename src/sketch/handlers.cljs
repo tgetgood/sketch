@@ -6,8 +6,6 @@
 
 (def shape-chan (chan))
 
-(def ^:private drawings (atom {}))
-
 (defn segment [prev l t]
   {:type :s
    :start prev
@@ -59,20 +57,4 @@
   (swap! drawings dissoc (get-point e)))
 
 
-(def draw-events
-  [{:events ["mousedown" "touchstart"] :handler draw-start-handler}
-   {:events ["mousemove" "touchmove"] :handler draw-move-handler}
-   {:events ["mouseup" "touchend"] :handler draw-end-handler}])
-
-(defn handle-handlers [f]
-  (doseq [{:keys [events handler]} draw-events]
-    (doseq [evt events]
-      (f evt handler))))
-
-(defn init! [canvas]
-  (handle-handlers
-   (fn [e f] (.addEventListener canvas e f)))
-  (fn []
-    (handle-handlers
-     (fn [e f] (.removeEventListener canvas e f)))))
 

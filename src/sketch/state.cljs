@@ -1,8 +1,10 @@
 (ns sketch.state
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as re-frame]
+            [sketch.canvas :as canvas]))
 
 (def default-db
-  {:drawings {}})
+  {:active-pointers {}
+   :drawing canvas/empty-canvas})
 
 (re-frame/reg-event-db
  :init-db

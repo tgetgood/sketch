@@ -2,50 +2,54 @@
   (:require [cljs.core.async :refer [<!]]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
+            re-frame.registrar
             sketch.state
-            )
+            sketch.canvas)
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (enable-console-print!)
 
-;;;;; Paren Soup
+(re-frame/reg-fx
+ :redraw-canvas
+ (fn [image]
+   {}))
 
-#_(let [last-state (atom nil)]
-  (defn animate! [t]
-    (when (not= @last-state @draw-state)
-      (update-canvas!)
-      (update-editor!)
-      (reset! last-state @draw-state))
-    (js/window.requestAnimationFrame
-     animate!)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Page init
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(re-frame/reg-event-db
+ :code-edit
+ (fn [_ _]
+   (js/alert "asd")))
 
-#_(go-loop []
-  (when-let [c (<! handlers/shape-chan)]
-    (swap! draw-state update :segments conj c)
-    (recur))) 
+(def canvas-events
+  [[[:on-mouse-down :on-touch-start] [:draw-start]]
+   [[:on-mouse-move :on-touch-move] [:draw-move]]
+   [[:on-mouse-up :on-touch-end] [:draw-end]]])
 
-#_(defonce started
-  (let [stop! (atom (init! canvas))]
-    (js/window.requestAnimationFrame animate!)
-    (.log js/console "Restarting hadlers.")
-    (defn on-js-reload []
-      (@stop!)
-      (reset! stop! (init! canvas)))))
+(def editor-events
+  [[[:on-input] [:code-edit]]])
 
-#_(defonce canvas-init
-  ;; TODO: Why the hell does the canvas get stretched if you try to set its size
-  ;; via CSS?
-  (u/set-canvas!))
+(defn event-map [m]
+  (into
+   {}
+   (mapcat (fn [[ks v]]
+             (map (fn [k]
+                    [k (fn [e]
+                         (.preventDefault e)
+                         (.persist e)
+                         (re-frame/dispatch (conj v e)))])
+               ks))
+           m)))
+
+(defn dummy []
+  (let [v @(re-frame/subscribe [:drawn-canvas])]
+    (fn []
+      (into [] (cons :div (doall (map (fn [x] [:div x]) v)))))))
 
 (defn main-panel []
-  (fn []
-    [:div
-     [:textarea {:id "editor"}]
-     [:canvas {:id "the-canvas"}]]))
+  [:div
+   [:textarea (assoc (event-map editor-events) :id "editor")]
+   [:canvas (assoc (event-map canvas-events) :id "the-canvas")]
+   [dummy]])
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
@@ -56,3 +60,6 @@
   (re-frame/dispatch-sync [:init-db])
   #_(dev-setup)
   (mount-root))
+
+(defn on-js-reload []
+  )
