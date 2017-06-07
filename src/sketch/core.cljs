@@ -1,24 +1,19 @@
 (ns sketch.core
   (:require [cljs.core.async :refer [<!]]
+            [clojure.pprint :as pprint]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
+            sketch.editor
             sketch.state
             [sketch.canvas :as canvas])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (enable-console-print!)
 
-(re-frame/reg-event-db
- :code-edit
- (fn [_ _]
-   (js/alert "asd")))
-
-
 (def canvas-events
   [[[:on-mouse-down :on-touch-start] [:draw-start]]
    [[:on-mouse-move :on-touch-move] [:draw-move]]
    [[:on-mouse-up :on-touch-end :on-mouse-out :on-mouse-leave] [:draw-end]]])
-
 
 (def editor-events
   [[[:on-input] [:code-edit]]])
@@ -36,7 +31,6 @@
                ks))
            m)))
 
-
 (defn canvas-panel []
   (reagent/create-class
    {:component-did-mount
@@ -47,9 +41,13 @@
 
 
 (defn main-panel []
-  [:div
-   [:textarea (assoc (event-map editor-events) :id "editor")]
-   [canvas-panel]])
+  (fn []
+    [:div
+     [:textarea (assoc (event-map editor-events)
+                       :id "editor"
+                       :value (with-out-str (clojure.pprint/pprint 
+                                             @(re-frame/subscribe [:drawing]))))]
+     [canvas-panel]]))
 
 
 (defn mount-root []

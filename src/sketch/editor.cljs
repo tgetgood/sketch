@@ -1,6 +1,7 @@
-(ns sketch.editor)
-
-(def editor (.getElementById js/document "code"))
+(ns sketch.editor
+  (:require [re-frame.core :as re-frame]
+            [cljs.js :refer [eval empty-state js-eval]]
+            [cljs.tools.reader :refer [read-string]]))
 
 ;; canvas <=> ds <=> string code buffer <=> code editor
 ;; The string code buffer is important because we want to keep non-functional
@@ -9,25 +10,32 @@
 ;;
 ;; TODO: Look at how both paren-soup and figwheel manage this.
 
+(defn try-read
+  [s]
+  (try
+    (read-string s)
+    (catch js/Error e nil)))
+
+(re-frame/reg-event-db
+ :code-edit
+ (fn [db [_ e]]
+   (if-let [d (-> e .-target .-value try-read)]
+     (assoc db :drawing d)
+     db)))
+
+(re-frame/reg-sub
+ :drawing
+ (fn [db _]
+   (:drawing db)))
+
 (defn code-edit-cb [{:keys [error value]}]
-  (if value
-    (reset! draw-state value)
-    (.error js/console error)))
+  )
 
 (defn code-edit [e]
-  (let [code (.-value editor)]
+  (let [code 444]
     (eval (empty-state)
               (read-string code)
               {:eval js-eval
                :source-map true
                :context :expr}
               code-edit-cb)))
-
-(defonce editor-listeners
-  (do
-    (.addEventListener editor "input" code-edit)
-    (.addEventListener editor "onpropertychange" code-edit)))
-
-(defn update-editor! []
-  (set! (.-value editor)
-        (with-out-str (pp/pprint @draw-state))))
