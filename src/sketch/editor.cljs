@@ -1,7 +1,8 @@
 (ns sketch.editor
-  (:require [re-frame.core :as re-frame]
-            [cljs.js :refer [eval empty-state js-eval]]
-            [cljs.tools.reader :refer [read-string]]))
+  (:require [cljs.js :refer [empty-state eval js-eval]]
+            [cljs.pprint :as pprint]
+            [cljs.tools.reader :refer [read-string]]
+            [re-frame.core :as re-frame]))
 
 ;; canvas <=> ds <=> string code buffer <=> code editor
 ;; The string code buffer is important because we want to keep non-functional
@@ -19,6 +20,7 @@
 (re-frame/reg-event-db
  :code-edit
  (fn [db [_ e]]
+   (.log js/console (-> e ))
    (if-let [d (-> e .-target .-value try-read)]
      (assoc db :drawing d)
      db)))
@@ -27,6 +29,13 @@
  :drawing
  (fn [db _]
    (:drawing db)))
+
+(re-frame/reg-sub
+ ::content
+ (fn [_ _]
+   (re-frame/subscribe [:drawing]))
+ (fn [drawing _]
+   (with-out-str (pprint/pprint drawing))))
 
 (defn code-edit-cb [{:keys [error value]}]
   )

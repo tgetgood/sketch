@@ -1,6 +1,5 @@
 (ns sketch.core
   (:require [cljs.core.async :refer [<!]]
-            [clojure.pprint :as pprint]
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             sketch.editor
@@ -16,7 +15,7 @@
    [[:on-mouse-up :on-touch-end :on-mouse-out :on-mouse-leave] [:draw-end]]])
 
 (def editor-events
-  [[[:on-input] [:code-edit]]])
+  [[[:on-input :on-change] [:code-edit]]])
 
 
 (defn event-map [m]
@@ -39,14 +38,17 @@
     (fn []
       [:canvas (assoc (event-map canvas-events) :id "the-canvas")])}))
 
+(defn editor-panel []
+  (fn []
+    [:textarea
+     (assoc (event-map editor-events)
+            :id "editor"
+            :value @(re-frame/subscribe [:sketch.editor/content]))]))
 
 (defn main-panel []
   (fn []
     [:div
-     [:textarea (assoc (event-map editor-events)
-                       :id "editor"
-                       :value (with-out-str (clojure.pprint/pprint 
-                                             @(re-frame/subscribe [:drawing]))))]
+     [editor-panel]
      [canvas-panel]]))
 
 
