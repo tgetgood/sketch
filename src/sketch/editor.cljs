@@ -17,13 +17,14 @@
     (read-string s)
     (catch js/Error e nil)))
 
-(re-frame/reg-event-db
- :code-edit
- (fn [db [_ e]]
-   (.log js/console (-> e ))
+(re-frame/reg-event-fx
+ ::edit
+ (fn [{:keys [db]} [_ e]]
+   (.log js/console (-> e .-target .-value))
    (if-let [d (-> e .-target .-value try-read)]
-     (assoc db :drawing d)
-     db)))
+     {:db (assoc db :drawing d)
+      :redraw-canvas d}
+     {:db db})))
 
 (re-frame/reg-sub
  :drawing

@@ -15,8 +15,7 @@
    [[:on-mouse-up :on-touch-end :on-mouse-out :on-mouse-leave] [:draw-end]]])
 
 (def editor-events
-  [[[:on-input :on-change] [:code-edit]]])
-
+  [[[:on-input :on-change] [:sketch.editor/edit]]])
 
 (defn event-map [m]
   (into
@@ -24,8 +23,8 @@
    (mapcat (fn [[ks v]]
              (map (fn [k]
                     [k (fn [e]
-                         (.preventDefault e)
                          (.persist e)
+                         (.preventDefault e)
                          (re-frame/dispatch (conj v e)))])
                ks))
            m)))
