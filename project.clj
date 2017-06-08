@@ -27,7 +27,7 @@
                 ;; the presence of a :figwheel configuration here
                 ;; will cause figwheel to inject the figwheel client
                 ;; into your build
-                :figwheel {:on-jsload "sketch.core/on-js-reload"}
+                :figwheel {:on-jsload "sketch.core/mount-root"}
 
                 :compiler {:main sketch.core
                            :asset-path "js/compiled/out"
