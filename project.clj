@@ -90,7 +90,7 @@
 
 
   :profiles {:dev {:dependencies [[binaryage/devtools "0.8.2"]
-                                  [figwheel-sidecar "0.5.8"]
+                                  [figwheel-sidecar "0.5.10"]
                                   [com.cemerick/piggieback "0.2.1"]]
                    :plugins [[cider/cider-nrepl "0.14.0"]
                              [refactor-nrepl "2.2.0"]]
