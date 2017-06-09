@@ -1,6 +1,8 @@
 (ns sketch.canvas
   (:require [re-frame.core :as re-frame]
-            [sketch.affine :refer [dist]]))
+            [reagent.core :as reagent]
+            [sketch.affine :refer [dist]]
+            [sketch.events :as events]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Ugly canvas stuff
@@ -115,7 +117,7 @@
 
 (re-frame/reg-event-fx
  :draw-move
- (fn [{{:keys [active-pointers drawing] :as db} :db
+ (fn [{{:keys [active-pointers drawings current-shape] :as db} :db
        [_ e] :event}]
    ;; FIXME: This code is unclear I think, but I think it's better and less
    ;; brittle than trying to find all of the failure points and sticking in
@@ -128,13 +130,13 @@
       (let [p (get active-pointers point)
             q (loc e)
             t (js/Date.now)
-            drawing (update (:drawing db)
+            old-drawing (get drawings current-shape)
+            drawing (update old-drawing
                             :segments conj (segment p q t))]
         (when (and point q)
           {:db (-> db
-                   (assoc :drawing drawing)
-                   (update :active-pointers assoc point q))
-           :redraw-canvas drawing})))
+                   (assoc-in [:drawings current-shape] drawing)
+                   (update :active-pointers assoc point q))})))
     {:db db})))
 
 (re-frame/reg-event-db
@@ -152,14 +154,48 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (re-frame/reg-fx
- :redraw-canvas
+ ::redraw-canvas!
  (fn [drawing]
+   (.log js/console (-> drawing :segments count))
    (when-let [ctx (get-ctx)]
      (clear!)
      (draw! ctx drawing))))
 
-
 (re-frame/reg-fx
- :resize-canvas!
+ ::resize-canvas!
  (fn [_]
    (set-canvas-size!)))
+
+(re-frame/reg-event-fx
+ ::resize-canvas
+ (fn [_ _]
+   {::resize-canvas! true}))
+
+(re-frame/reg-event-fx
+ ::redraw-canvas
+ (fn [{[_ d] :event :as a}]
+   {::redraw-canvas! d}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Components
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defn canvas-inner []
+  (reagent/create-class
+   {:component-did-mount  (fn [this]
+                            (re-frame/dispatch [::resize-canvas])
+                            (let [drawing (reagent/props this)]
+                              (re-frame/dispatch [::redraw-canvas drawing])))
+    :component-did-update (fn [this]
+                            (let [drawing (reagent/props this)]
+                              (re-frame/dispatch [::redraw-canvas drawing])))
+    :reagent-render       (fn []
+                            [:canvas
+                             (assoc (events/event-map events/canvas-events)
+                                    :id "the-canvas")])}))
+
+(defn canvas-panel []
+  (let [drawing (re-frame/subscribe [:current-drawing])]
+    (fn []
+      [canvas-inner @drawing])))

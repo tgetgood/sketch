@@ -4,7 +4,8 @@
 
 (def default-db
   {:active-pointers {}
-   :drawing canvas/empty-canvas})
+   :current-shape "shape~1"
+   :drawings {"shape~1" canvas/empty-canvas}})
 
 (re-frame/reg-event-db
  :init-db

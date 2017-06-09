@@ -2,7 +2,8 @@
   (:require [cljs.js :refer [empty-state eval js-eval]]
             [cljs.pprint :as pprint]
             [cljs.tools.reader :refer [read-string]]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [sketch.events :as events]))
 
 ;; canvas <=> ds <=> string code buffer <=> code editor
 ;; The string code buffer is important because we want to keep non-functional
@@ -20,21 +21,34 @@
 (re-frame/reg-event-fx
  ::edit
  (fn [{:keys [db]} [_ e]]
-   (.log js/console (-> e .-target .-value))
    (if-let [d (-> e .-target .-value try-read)]
      {:db (assoc db :drawing d)
       :redraw-canvas d}
      {:db db})))
 
+;; TODO: These guys needs to go into some common subscription ns.
 (re-frame/reg-sub
- :drawing
+ :drawings
  (fn [db _]
-   (:drawing db)))
+   (:drawings db)))
+
+(re-frame/reg-sub
+ :current-shape
+ (fn [db _]
+   (:current-shape db)))
+
+(re-frame/reg-sub
+ :current-drawing
+ (fn [_ _]
+   [(re-frame/subscribe [:current-shape])
+    (re-frame/subscribe [:drawings])])
+ (fn [[current drawings] _]
+   (get drawings current)))
 
 (re-frame/reg-sub
  ::content
  (fn [_ _]
-   (re-frame/subscribe [:drawing]))
+   (re-frame/subscribe [:current-drawing]))
  (fn [drawing _]
    (with-out-str (pprint/pprint drawing))))
 
@@ -49,3 +63,14 @@
                :source-map true
                :context :expr}
               code-edit-cb)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Copmponents
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn editor-panel []
+  (fn []
+    [:textarea
+     (assoc (events/event-map events/editor-events)
+            :id "editor"
+            :value @(re-frame/subscribe [:sketch.editor/content]))]))

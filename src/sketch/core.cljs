@@ -1,54 +1,17 @@
 (ns sketch.core
-  (:require [cljs.core.async :refer [<!]]
+  (:require [re-frame.core :as re-frame]
             [reagent.core :as reagent]
-            [re-frame.core :as re-frame]
-            sketch.editor
-            sketch.state
-            [sketch.canvas :as canvas])
-  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
+            [sketch.canvas :as canvas]
+            [sketch.editor :as editor]
+            sketch.state))
 
 (enable-console-print!)
-
-(def canvas-events
-  [[[:on-mouse-down :on-touch-start] [:draw-start]]
-   [[:on-mouse-move :on-touch-move] [:draw-move]]
-   [[:on-mouse-up :on-touch-end :on-mouse-out :on-mouse-leave] [:draw-end]]])
-
-(def editor-events
-  [[[:on-input :on-change] [:sketch.editor/edit]]])
-
-(defn event-map [m]
-  (into
-   {}
-   (mapcat (fn [[ks v]]
-             (map (fn [k]
-                    [k (fn [e]
-                         (.persist e)
-                         (.preventDefault e)
-                         (re-frame/dispatch (conj v e)))])
-               ks))
-           m)))
-
-(defn canvas-panel []
-  (reagent/create-class
-   {:component-did-mount
-    #(re-frame/dispatch [:resize-canvas])
-    :reagent-render
-    (fn []
-      [:canvas (assoc (event-map canvas-events) :id "the-canvas")])}))
-
-(defn editor-panel []
-  (fn []
-    [:textarea
-     (assoc (event-map editor-events)
-            :id "editor"
-            :value @(re-frame/subscribe [:sketch.editor/content]))]))
 
 (defn main-panel []
   (fn []
     [:div
-     [editor-panel]
-     [canvas-panel]]))
+     [editor/editor-panel]
+     [canvas/canvas-panel]]))
 
 
 (defn mount-root []
@@ -61,7 +24,3 @@
   (re-frame/dispatch-sync [:init-db])
   #_(dev-setup)
   (mount-root))
-
-
-(defn on-js-reload []
-  )
