@@ -1,5 +1,6 @@
 (ns sketch.canvas
-  (:require [re-frame.core :as re-frame]
+  (:require [devcards.core :refer-macros [defcard]]
+            [re-frame.core :as re-frame]
             [reagent.core :as reagent]
             [sketch.affine :refer [dist]]
             [sketch.events :as events]))
@@ -156,7 +157,6 @@
 (re-frame/reg-fx
  ::redraw-canvas!
  (fn [drawing]
-   (.log js/console (-> drawing :segments count))
    (when-let [ctx (get-ctx)]
      (clear!)
      (draw! ctx drawing))))
@@ -199,3 +199,8 @@
   (let [drawing (re-frame/subscribe [:current-drawing])]
     (fn []
       [canvas-inner @drawing])))
+
+(defcard canvas-card
+  "the canvas"
+  (devcards.core/reagent
+   [canvas-panel]))

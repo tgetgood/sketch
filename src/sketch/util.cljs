@@ -1,6 +1,6 @@
 (ns sketch.util)
 
-(defn set-colour! [c]
+#_(defn set-colour! [c]
   (set! (.-strokeStyle ctx) c))
 
 (defn red! []

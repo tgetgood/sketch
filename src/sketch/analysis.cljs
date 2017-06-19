@@ -1,7 +1,6 @@
-(ns sketch.analysis
-  (:require [sketch.util :refer [canvas ctx]]))
+(ns sketch.analysis)
 
-(defn- get-pixels []
+#_(defn- get-pixels []
   (.-data (.getImageData ctx 0 0 (.-width canvas) (.-height canvas))))
 
 (defn- pixel-distance

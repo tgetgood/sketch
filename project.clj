@@ -10,6 +10,7 @@
                  [org.clojure/clojurescript "1.9.562"]
                  [org.clojure/core.async "0.3.443"
                   :exclusions [org.clojure/tools.reader]]
+                 [devcards "0.2.3"]
                  [reagent "0.6.2"]
                  [re-frame "0.9.4"]]
 
@@ -21,7 +22,16 @@
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
   :cljsbuild {:builds
-              [{:id "dev"
+              [{:id "devcards"
+                :source-paths ["src"]
+                :figwheel { :devcards true}
+                :compiler {:main       "sketch.devcards"
+                           :asset-path "js/compiled/devcards_out"
+                           :output-to  "resources/public/js/compiled/devcards.js"
+                           :output-dir "resources/public/js/compiled/devcards_out"
+                           :source-map-timestamp true
+                           :preloads [devtools.preload]}}
+               {:id "dev"
                 :source-paths ["src"]
 
                 ;; the presence of a :figwheel configuration here
@@ -56,28 +66,10 @@
              ;; Start an nREPL server into the running figwheel process
              :nrepl-port 7888
 
-             ;; Server Ring Handler (optional)
-             ;; if you want to embed a ring handler into the figwheel http-kit
-             ;; server, this is for simple ring servers, if this
-
-             ;; doesn't work for you just run your own server :) (see lein-ring)
-
-             ;; :ring-handler hello_world.server/handler
-
-             ;; To be able to open files in your editor from the heads up display
-             ;; you will need to put a script on your path.
-             ;; that script will have to take a file path and a line number
-             ;; ie. in  ~/bin/myfile-opener
-             ;; #! /bin/sh
-             ;; emacsclient -n +$2 $1
-             ;;
-             ;; :open-file-command "myfile-opener"
 
              ;; if you are using emacsclient you can just use
              :open-file-command "emacsclient"
 
-             ;; if you want to disable the REPL
-             ;; :repl false
 
              ;; to configure a different figwheel logfile path
              ;; :server-logfile "tmp/logs/figwheel-logfile.log"

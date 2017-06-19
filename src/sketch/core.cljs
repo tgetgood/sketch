@@ -1,11 +1,15 @@
 (ns sketch.core
-  (:require [re-frame.core :as re-frame]
+  (:require [devcards.core :refer-macros [defcard]]
+            [re-frame.core :as re-frame]
             [reagent.core :as reagent]
             [sketch.canvas :as canvas]
             [sketch.editor :as editor]
             sketch.state))
 
 (enable-console-print!)
+
+(def debug?
+  ^boolean goog.DEBUG)
 
 (defn main-panel []
   (fn []
@@ -19,8 +23,8 @@
   (reagent/render [main-panel]
                   (.getElementById js/document "app")))
 
-
 (defn ^:export init []
   (re-frame/dispatch-sync [:init-db])
-  #_(dev-setup)
+  #_(when debug?
+    (dev-setup))
   (mount-root))

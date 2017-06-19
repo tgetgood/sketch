@@ -2,6 +2,7 @@
   (:require [cljs.js :refer [empty-state eval js-eval]]
             [cljs.pprint :as pprint]
             [cljs.tools.reader :refer [read-string]]
+            [devcards.core :refer-macros [defcard]]
             [re-frame.core :as re-frame]
             [sketch.events :as events]))
 
@@ -65,7 +66,7 @@
               code-edit-cb)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Copmponents
+;;;;; Components
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn editor-panel []
@@ -74,3 +75,12 @@
      (assoc (events/event-map events/editor-events)
             :id "editor"
             :value @(re-frame/subscribe [:sketch.editor/content]))]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Devcards
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defcard main-editor
+  "Test card"
+  (devcards.core/reagent
+   [editor-panel]))
