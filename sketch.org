@@ -423,52 +423,66 @@ did as inspiration.
 	 The project focus is shifting to be more about the new medium and less
 	 immediately about the AI ideas. I think that's for the best.
 *** Tasks
-**** TODO Clean up previous demos
-		 The code is in such a terrible state right now. Experiments left for two
-		 months... Time to clean it up and document it so that I don't have to start
-		 from scratch a third time!
-**** TODO Capture drawn figures as code
-**** TODO Examine how paren-soup and figwheel deal with broken code
-		 We can't go trying to load code that doesn't read. 
-**** TODO Demote Editing
-		 It's taking up too much time and not as important as the generating code
-		 for shapes. Just use a textarea for now and I'll get what I need for a
-		 proof of concept.
+**** Priority
+***** TODO Update project docs
+			This entire document is way out of date. 
+			
+			Try to rewrite the description if you can and make it more clear.
+***** TODO Work out drawing flow
+		 	This is a tricky one. We want a single "drawing" to be atomic in the code,
+		 	but we want to be able to derive pictures from others, etc.. Maybe
+		 	something along the lines of undo chunking would be appropriate?
+***** TODO Fix Coordinate System
+		 	Origin in the bottom left.
+***** TODO Master - Instance Logic
+		 	Sketchpad had it right in allowing objects to be instances of a master
+		 	object so that editing the master would change all occurences in the
+		 	compound product.
+
+		 	There's a mutability problem here though. I think what we want is a
+		 	prototypical inheritance system where you can create new templates from old
+		 	ones and where you can instantiate templates. Templates shouldn't change
+		 	though lest editing one picture change another. Instead you need a way take
+		 	some set of instances of a template and link them to a new template at will
+		 	so that we have a localised version of this master-instance editing style.
+
+		 	This is conceptually similar to Clojure's core principles: instances should
+		 	be mutable references to immuatable data.
+***** TODO Look at that declarative programming framework
+**** Done
+***** DONE Clean up previous demos
+		 	The code is in such a terrible state right now. Experiments left for two
+		 	months... Time to clean it up and document it so that I don't have to start
+		 	from scratch a third time!
+***** DONE Capture drawn figures as code
+***** DONE Demote Editing
+		 	It's taking up too much time and not as important as the generating code
+		 	for shapes. Just use a textarea for now and I'll get what I need for a
+		 	proof of concept.
+***** DONE Security
+		 	Evalling raw code is a horrendous security hole. Don't do it.
+
+		 	Thought: This is intended as an end user application. No server, no page so
+		 	to speak. Any programming environment is a huge security risk: if you
+		 	compile and run code you copied off the internet without understanding it
+		 	you're in trouble. Of course that's a cop out. At least we have the browser
+		 	to protect you from most things...
+		 	
+		 	This needs serious thought. Most programmers don't do the right thing most
+		 	of the time, so obviously if we want non-programmers to use this we have to
+		 	figure out a security model that works by itself most of the time.
+		 	
+		 	Kay said that the browser should be part of the kernel if you really want
+		 	complete freedom with decent safety. I've never really considered kernel
+		 	programming.
+		 	
+		 	Look, if we stick to pure EDN then most of these problems go away. We're
+		 	reading data, not evalling code. I'm pretty sure I can describe any drawing
+		 	purely declaratively.
+**** Not Doing (right now)
 ***** TODO BUG: when code in textarea reformats, we lose the cursor.
 			That makes editing code very difficult.
-**** TODO Work out drawing flow
-		 This is a tricky one. We want a single "drawing" to be atomic in the code,
-		 but we want to be able to derive pictures from others, etc.. Maybe
-		 something along the lines of undo chunking would be appropriate?
-**** TODO Fix Coordinate System
-		 Origin in the bottom left.
-**** TODO Master - Instance Logic
-		 Sketchpad had it right in allowing objects to be instances of a master
-		 object so that editing the master would change all occurences in the
-		 compound product.
-
-		 There's a mutability problem here though. I think what we want is a
-		 prototypical inheritance system where you can create new templates from old
-		 ones and where you can instantiate templates. Templates shouldn't change
-		 though lest editing one picture change another. Instead you need a way take
-		 some set of instances of a template and link them to a new template at will
-		 so that we have a localised version of this master-instance editing style.
-
-		 This is conceptually similar to Clojure's core principles: instances should
-		 be mutable references to immuatable data.
-**** TODO Security
-		 Evalling raw code is a horrendous security hole. Don't do it.
-
-		 Thought: This is intended as an end user application. No server, no page so
-		 to speak. Any programming environment is a huge security risk: if you
-		 compile and run code you copied off the internet without understanding it
-		 you're in trouble. Of course that's a cop out. At least we have the browser
-		 to protect you from most things...
-		 
-		 This needs serious thought. Most programmers don't do the right thing most
-		 of the time, so obviously if we want non-programmers to use this we have to
-		 figure out a security model that works by itself most of the time.
-		 
-		 Kay said that the browser should be part of the kernel if you really want
-		 complete freedom with decent safety. I've never really considered kernel
-		 programming.
+***** TODO Examine how paren-soup and figwheel deal with broken code
+		 	We can't go trying to load code that doesn't read. 
+		 	
+		 	Low priority
