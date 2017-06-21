@@ -24,8 +24,8 @@
   :cljsbuild {:builds
               [{:id "devcards"
                 :source-paths ["src"]
-                :figwheel { :devcards true}
-                :compiler {:main       "sketch.devcards"
+                :figwheel {:devcards true}
+                :compiler {:main       sketch.devcards 
                            :asset-path "js/compiled/devcards_out"
                            :output-to  "resources/public/js/compiled/devcards.js"
                            :output-dir "resources/public/js/compiled/devcards_out"

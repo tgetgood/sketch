@@ -4,7 +4,7 @@
             [cljs.tools.reader :refer [read-string]]
             [devcards.core :refer-macros [defcard]]
             [re-frame.core :as re-frame]
-            [sketch.events :as events]))
+            [sketch.events.editor :as events]))
 
 ;; canvas <=> ds <=> string code buffer <=> code editor
 ;; The string code buffer is important because we want to keep non-functional
@@ -12,46 +12,10 @@
 ;; to read it.
 ;;
 ;; TODO: Look at how both paren-soup and figwheel manage this.
-
-(defn try-read
-  [s]
-  (try
-    (read-string s)
-    (catch js/Error e nil)))
-
-(re-frame/reg-event-fx
- ::edit
- (fn [{:keys [db]} [_ e]]
-   (if-let [d (-> e .-target .-value try-read)]
-     {:db (assoc db :drawing d)
-      :redraw-canvas d}
-     {:db db})))
-
-;; TODO: These guys needs to go into some common subscription ns.
-(re-frame/reg-sub
- :drawings
- (fn [db _]
-   (:drawings db)))
-
-(re-frame/reg-sub
- :current-shape
- (fn [db _]
-   (:current-shape db)))
-
-(re-frame/reg-sub
- :current-drawing
- (fn [_ _]
-   [(re-frame/subscribe [:current-shape])
-    (re-frame/subscribe [:drawings])])
- (fn [[current drawings] _]
-   (get drawings current)))
-
-(re-frame/reg-sub
- ::content
- (fn [_ _]
-   (re-frame/subscribe [:current-drawing]))
- (fn [drawing _]
-   (with-out-str (pprint/pprint drawing))))
+;; TODO: These guys needs to go -mapnto some common subscription ns.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; cljs eval demo
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn code-edit-cb [{:keys [error value]}]
   )
@@ -65,22 +29,43 @@
                :context :expr}
               code-edit-cb)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Components
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn inner-editor-panel [content]
+  [:textarea
+   (assoc events/editor-event-map
+          :class "editor"
+          :value content)])
 
 (defn editor-panel []
-  (fn []
-    [:textarea
-     (assoc (events/event-map events/editor-events)
-            :id "editor"
-            :value @(re-frame/subscribe [:sketch.editor/content]))]))
+  (let [content (re-frame/subscribe [:sketch.events.common/content])]
+    (fn []
+      [inner-editor-panel @content])))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Devcards
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn shape-token [shape current]
+  [:div.shape-token
+   (merge {:href "#"
+           :on-click
+           (re-frame/dispatch [:sketch.events.editor/set-current shape])}
+          (when (= shape current)
+            {:style {:color "red"}}))
+   shape])
 
-(defcard main-editor
-  "Test card"
-  (devcards.core/reagent
-   [editor-panel]))
+(defn new-shape-token []
+  [:div.new-drawing
+   [:a {:on-click (re-frame/dispatch [:sketch.events.editor/new-shape])}
+    [:span "+"]]])
+
+(defn shape-list [shapes current]
+  (apply conj
+         [:div.drawings-list
+               [new-shape-token]]
+         (mapv (fn [s] [shape-token s current]) shapes)))
+
+(defn left-panel [shapes current code]
+  [:div
+   [:div.left [shape-list shapes current code]]
+   (when current 
+     [:div.right [inner-editor-panel code]])])

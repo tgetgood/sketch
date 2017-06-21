@@ -2,7 +2,7 @@
   (:require [devcards.core :refer-macros [defcard]]
             [re-frame.core :as re-frame]
             [reagent.core :as reagent]
-            [sketch.canvas :as canvas]
+            [sketch.components.canvas :as canvas]
             [sketch.editor :as editor]
             sketch.state))
 
@@ -16,7 +16,6 @@
     [:div
      [editor/editor-panel]
      [canvas/canvas-panel]]))
-
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
