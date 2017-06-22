@@ -39,5 +39,5 @@
 (re-frame/reg-event-db
  ::set-current
  (fn [db [_ shape]]
-   (assoc db :current-shape shape )))
+   (assoc db :current-shape shape)))
 

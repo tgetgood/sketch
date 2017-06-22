@@ -1,6 +1,5 @@
 (ns sketch.core
-  (:require [devcards.core :refer-macros [defcard]]
-            [re-frame.core :as re-frame]
+  (:require [re-frame.core :as re-frame]
             [reagent.core :as reagent]
             [sketch.components.canvas :as canvas]
             [sketch.editor :as editor]
