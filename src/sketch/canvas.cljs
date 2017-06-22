@@ -94,7 +94,6 @@
   {})
 
 (defn draw! [ctx path]
-  (println path)
   ;; TODO: Save old style
   ;; TODO: Set path style
   (.beginPath ctx)
