@@ -35,10 +35,3 @@
     (re-frame/subscribe [:drawings])])
  (fn [[current drawings] _]
    (get drawings current)))
-
-(re-frame/reg-sub
- ::content
- (fn [_ _]
-   (re-frame/subscribe [:current-drawing]))
- (fn [drawing _]
-   (with-out-str (pprint/pprint drawing))))

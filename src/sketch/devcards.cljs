@@ -32,7 +32,7 @@
 pprint is pretty slow, so updating the code formatting in real time this way
 isn't an option. Let's just leave auto formatting for a later date.'"
   (devcards.core/reagent
-   [editor/inner-editor-panel (with-out-str (pprint/pprint dummy-code))]))
+   [editor/inner-editor-panel dummy-code]))
 
 ;; TODO: The canvas should resize fluidly and the stuff you draw should always
 ;; be in the right place. I.e. Dynamic resizing and recalculation of the pointer
@@ -43,11 +43,24 @@ isn't an option. Let's just leave auto formatting for a later date.'"
    [canvas/canvas-panel]))
 
 (defcard shape-list-test
+  ;; FIXME: Set cursor to a clicker hovering over the + and the shapes.
+  ;; TODO: New shape inheriting from shape.
+  ;; TODO: Edit history (previous versions) of shape.
   (devcards.core/reagent
    [editor/shape-list ["shape~1" "shape~2" "shape~3"] "shape~2" {:test "ode"}]))
 
 (defcard left-panel
   (devcards.core/reagent
-   [editor/left-panel ["A" "B" "C" "D"] "C" (str {:test "code"})]))
+   [editor/left-panel ["A" "B" "C" "D"] "C" {:test "code"}]))
 
+(defcard interactive-left-panel
+  "Interactive functional left panel"
+  (devcards.core/reagent
+   (fn []
+     (let [drawings (re-frame/subscribe [:drawings])
+           current (re-frame/subscribe [:current-shape])
+           code (re-frame/subscribe [:current-drawing])]
+       (fn []
+         (let [shapes (keys @drawings)]
+           [editor/left-panel shapes @current @code]))))))
 

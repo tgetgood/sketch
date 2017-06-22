@@ -30,6 +30,13 @@
               code-edit-cb)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Helpers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn format-code [s]
+  (with-out-str (pprint/pprint s)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Components
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -37,25 +44,25 @@
   [:textarea
    (assoc events/editor-event-map
           :class "editor"
-          :value content)])
+          :value (format-code content))])
 
 (defn editor-panel []
-  (let [content (re-frame/subscribe [:sketch.events.common/content])]
+  (let [content (re-frame/subscribe [:current-drawing])]
     (fn []
       [inner-editor-panel @content])))
 
 (defn shape-token [shape current]
   [:div.shape-token
-   (merge {:href "#"
-           :on-click
-           (re-frame/dispatch [:sketch.events.editor/set-current shape])}
-          (when (= shape current)
-            {:style {:color "red"}}))
-   shape])
+   [:a
+    (merge {:on-click
+            #(re-frame/dispatch [:sketch.events.editor/set-current shape])}
+           (when (= shape current)
+             {:style {:color "red"}}))
+    shape]])
 
 (defn new-shape-token []
   [:div.new-drawing
-   [:a {:on-click (re-frame/dispatch [:sketch.events.editor/new-shape])}
+   [:a {:on-click #(re-frame/dispatch [:sketch.events.editor/new-shape])}
     [:span "+"]]])
 
 (defn shape-list [shapes current]
