@@ -4,11 +4,11 @@
 Elevator pitch name might be sketchpad meets hypercard. Or 3D printers in space.
 
 This isn't really about Sketchpad. I'm just taking the scope of what Sutherland
-did as inspiration.
+did as inspiration and a starting point.
 
 * Intentions
 
-	The ultimate goal of this project is to achieve a bidirectional connection
+	The immediate goal of this project is to achieve a bidirectional connection
 	between direct drawing and code. Draw a shape and see the code that generates
 	it (or in our case a potentially smoothed version of it). Modify the drawing
 	and the code updates, modify the code and the drawing updates.
@@ -45,7 +45,7 @@ did as inspiration.
 		 about that breakdown, so there should be an easy way to ignore it.
 
 		 Recognising that the petals are all variations on the same shape, the computer
-		 should offer to make them all the same spaced and rotated in a radially
+		 should offer to make them all the same, spaced and rotated in a radially
 		 symmetric pattern — here we need to recognise near radial symmetry. That might
 		 not be what you want though, maybe you want the slight imperfections and
 		 variations, but you do want them evenly spaced.
@@ -68,12 +68,13 @@ did as inspiration.
 		#+END_SRC
 
 		Which I would then have to manually transform into a map over ranges to
-		create my infinite regression.
+		create my infinite shrinking image.
 
 		Aside: If we render lazily — by just aborting the render if the thing to be
-		rendered can't be bigger than a pixel — then we can easily accomodate
-		fractal and other lazily infinite drawings. I think that would be very
-		valuable, but let's see how that fits into the bigger picture.
+		rendered can't be bigger than a pixel or are out of the frame — then we can
+		easily accomodate fractal and other lazily infinite drawings. I think that
+		would be very valuable (??? cool maybe), but let's see how that fits into
+		the bigger picture.
 
 		Better would be if the computer generated a transducer and specific data
 		examples to fit in. Something like:
@@ -115,7 +116,8 @@ did as inspiration.
 		of the hardest problems for me when learning to program games in highschool
 		was keeping the game state and the screen state in sync. I ended up wiping
 		the screen on every frame because I couldn't deal with it, thus reinventing
-		the immediate mode (my games were stuttery and slow, but those 80486s didn't
+		immediate mode graphics (my games were stuttery and slow, but those 80486s
+		didn't
 		have GPUs).
 
 *** Reacting to the User
@@ -124,6 +126,58 @@ did as inspiration.
 		After all most UIs are just infographics with mostly detrimental
 		interaction.
 
+** From Drawing to Programming
+
+	The essential idea here is to replace the explicit programming of shapes with
+	the ability to drawn and *see* what the computer interprets your drawing as.
+
+	Given sufficient control to manipulate the drawings after the computer
+	interprets them, this could be a useful drawing tool in itself, but would
+	most likely just be a toy.
+
+	If you can link data into your drawing, then you can create data graphics in
+	something akin to the fashion of drawing.
+
+	Beyond that, what if you can link in arbitrary logic? Can you create a
+	programming environment based on visual and spatial feedback?
+
+	In short I'm leaning towards making this into a UI building tool. A way to
+	hand draw mockups and turn them into a working program all at once.
+
+	Would it be possible to separate the data, the interaction, and the visual
+	representation sufficiently to make porting this over to an existing cljs or
+	js program less painful. Can the designer's work be used for production
+	engineering?
+
+	Rather than writing another hundred UIs, I'd rather make rails.
+
+	I needed to remind myself how this fits into the grand scheme of the
+	document. It really is about new and broader forms of computer programming. I
+	think we need to move away from interaction and towards communication.
+
+	But why stop at UIs? There are concepts that are easier to express visually or
+	geometricall that symbolically / logically. There are also things that are
+	easier to express haptically — imagine trying to learn gymnastics from a book
+	— but that's another topic.
+
+	If as Hadamard proposed genius is the ability to think in multiple modes at
+	once, then we need to find new modes of interaction with computers.
+
+** Rough Stages
+*** Pictures <=> Code
+*** Data Driven Drawings
+		A la D3
+*** Data Driven Apps
+		Domain Data => UI spec (data) => Data display
+*** Interactivity
+		This is late in the game for a reason. Read [[http://worrydream.com/#!/MagicInk][magic ink]]. It's an extreme
+		opinion, and I think we will need interactivity eventually, but we can and
+		should get pretty damned far without.
+*** Visual Abstraction
+		If you're drawing something similar to something else you or someone else
+		has drawn in the past then the system should recognise that and use it to
+		simplify the picture. It should also be able to smooth out pictures by
+		recognising that you've drawn an almost-square.
 ** Purpose
 
 	 Of course the most interesting task here is making the computer abstract
@@ -131,22 +185,7 @@ did as inspiration.
 	 into the drawing you gave it. In my opinion this is a task that requires real
 	 visual intelligence, but I don't think it's too much to approach.
 
-** Things to try
-
-	An interesting first experiment would be to try and map hand drawing to
-	B-splines. Symmetry and smoothness can be parameters adjustable by the user.
-
-	Simpler and also interesting would be to give the computer a primitive vocab
-	of built in canvas directives and come up with a search algorithm to try and
-	fit those to whatever you draw. This could actually turn out to be a harder
-	but more interesting problem.
-
-** Names
-	 - Pallas
-	 - Athene
-	 - Triton
-
-* Research
+* Research Notes
 ** Notes from Sutherland
 	 Mostly almost cliched advice now, but the fact he came to all these
 	 conclusions basically de novo is incredible.
@@ -208,10 +247,9 @@ did as inspiration.
 	 Abstraction]] is also a good one.
 
 ** Readings / references
-** [[http://www.red3d.com/cwr/papers/1982/ASAS82.html]]
-** [[http://hillside.net/plop/2006/Papers/Library/interactive_informationgrap.pdf][Towards a Pattern Language for Interactive Information Graphics]]
-** [[https://en.wikipedia.org/wiki/Cognitive_dimensions_of_notations]]
-
+*** [[http://www.red3d.com/cwr/papers/1982/ASAS82.html]]
+*** [[http://hillside.net/plop/2006/Papers/Library/interactive_informationgrap.pdf][Towards a Pattern Language for Interactive Information Graphics]]
+*** [[https://en.wikipedia.org/wiki/Cognitive_dimensions_of_notations]]
 
 ** Tools to use (or just steal from)
  - [[https://github.com/ztellman/penumbra]]
@@ -241,60 +279,7 @@ did as inspiration.
 		 - [[https://en.wikipedia.org/wiki/Adaptive_resonance_theory][Adaptive Resonance Theory]]
 		 - [[https://en.wikipedia.org/wiki/Self-organizing_map][Kohonen Networks]]
 
-* A Bigger Picture
-** From Drawing to Programming
-
-	The essential idea here is to replace the explicit programming of shapes with
-	the ability to drawn and *see* what the computer interprets your drawing as.
-
-	Given sufficient control to manipulate the drawings after the computer
-	interprets them, this could be a useful drawing tool in itself, but would
-	most likely just be a toy.
-
-	If you can link data into your drawing, then you can create data graphics in
-	something akin to the fashion of drawing.
-
-	Beyond that, what if you can link in arbitrary logic? Can you create a
-	programming environment based on visual and spatial feedback?
-
-	In short I'm leaning towards making this into a UI building tool. A way to
-	hand draw mockups and turn them into a working program all at once.
-
-	Would it be possible to separate the data, the interaction, and the visual
-	representation sufficiently to make porting this over to an existing cljs or
-	js program less painful. Can the designer's work be used for production
-	engineering?
-
-	Rather than writing another hundred UIs, I'd rather make rails.
-
-	I needed to remind myself how this fits into the grand scheme of the
-	document. It really is about new and broader forms of computer programming. I
-	think we need to move away from interaction and towards communication.
-
-	But why stop at UIs? There are concepts that are easier to express visually or
-	geometricall that symbolically / logically. There are also things that are
-	easier to express haptically — imagine trying to learn gymnastics from a book
-	— but that's another topic.
-
-	If as Hadamard proposed genius is the ability to think in multiple modes at
-	once, then we need to find new modes of interaction with computers.
-
-** Rough Stages
-*** Pictures <=> Code
-*** Data Driven Drawings
-		A la D3
-*** Data Driven Apps
-		Domain Data => UI spec (data) => Data display
-*** Interactivity
-		This is late in the game for a reason. Read [[http://worrydream.com/#!/MagicInk][magic ink]]. It's an extreme
-		opinion, and I think we will need interactivity eventually, but we can and
-		should get pretty damned far without.
-*** Visual Abstraction
-		If you're drawing something similar to something else you or someone else
-		has drawn in the past then the system should recognise that and use it to
-		simplify the picture. It should also be able to smooth out pictures by
-		recognising that you've drawn an almost-square.
-* Notes
+* Dev Log
 ** [2017-05-31 Wed 13:05]
 	 Had an idea this morning that we may want to randomly generate pictures, but
 	 if we do that then the artist probably won't want the picture to change every
@@ -302,30 +287,30 @@ did as inspiration.
 	 nondeterminism pretty cleanly: randomness is just arbitraryness — "I don't
 	 care", not "god plays dice" — so anything random should explicitely have the
 	 seed set as part of the datastructure so that it's deterministic but not
-	 predetermined. 
+	 predetermined.
 ** [2017-06-01 Thu 20:35]
 	 We need a composable representation of shapes. I'm starting to think that we
 	 should go back to the old idea of representing basic squiggles as normalised
 	 images with baked in affine transforms. But then what is the shape itself?
-	 
+
 	 How do we represent the link from master to instance?
 
 	 How do we represent the link from master to master?
 
 	 How do we transition an instance from one master to another?
-	 
+
 	 How do we prevent the proliferation of (unneeded) shapes?
 ** [2017-06-01 Thu 20:58]
 	 God, why am I spending so much time dealing with damned handlers? You'd think
 	 this would be easy by now.
-	 
+
 	 I can simplify my data model to make the input handling trivial, but is that
 	 really the way to do it? In general no, but in this case I think treating
 	 each individual mouse movement separately might in fact be a better solution.
-	 
+
 	 Even if I change the data model, I still need some way to extend to multiple
 	 types of events.
-	 
+
 	 I also want to be able to draw with two fingers at once. What's the point of
 	 a touch screen if you can only use it as a glorified mouse?
 ** [2017-06-04 Sun 10:42]
@@ -338,7 +323,7 @@ did as inspiration.
 	 [[https://processing.org/tutorials/drawing/][This]] is wrong. Instead of writing a little code to make the computer do what
 	 humans expect it to, they wrote a page to reeducate humans to do what's
 	 easiest for the computer.
-	 
+
 	 TODO: Look into other coordinate systems and see if they might make more
 	 sense to untrained people.
 ** [2017-06-04 Sun 10:47]
@@ -346,7 +331,7 @@ did as inspiration.
 	 looked at two editors, but they both choke on large amounts of code when I
 	 try to use them in an immediate fashion. I'm not interested in maintaining a
 	 pair of parsetrees and mapping diffs between them. React can do that for me.
-	 
+
 	 But for now forget highlighting and the rest of the editor nonsense. Let's
 	 just get the code mapping working.
 ** [2017-06-05 Mon 10:05]
@@ -358,7 +343,24 @@ did as inspiration.
 	 The re-frame lein template app has google closure config flags setup. That
 	 will be handy.
 * Implementation
-** Things to do
+** Features
+	 These are kind of redundant with the examples given in the first section.
+*** Curve Smoothing
+		When I hand draw a figure, I should get a slider that tells the computer how
+		much smoothing I'm willing to tolerate. Smoothing is a somewhat vague term,
+		but I'm going to equate it with simplicity. Lines are simpler than
+		polynomials are simpler than splines...
+
+		So the slider is basically a visualisation of the tradeoff between fidelity
+		and simplicity.
+*** Automatic Reuse
+		If I draw a square, and then later in the code draw another square, that
+		should get picked up. There should only be one square.
+*** Connection from code linkage to visual graph
+		Compound shapes are programmatically constructed from simple shapes. This
+		can easily be seen from the code defining them, but needs to be present in
+		an isomorphic fashion in the UI.
+** Old Plan
 *** Algorithmic First Steps
 **** DONE Capture brush strokes on canvas
 **** DONE Create a Primitive Language
@@ -419,70 +421,70 @@ did as inspiration.
 ***** TODO Render bezier path to hidden canvas
 ***** DONE Get bitmap (as data) from canvas
 ***** TODO Compare curves
-** Phase 2
+** Plan
 	 The project focus is shifting to be more about the new medium and less
 	 immediately about the AI ideas. I think that's for the best.
 *** Tasks
 **** Priority
-***** TODO Update project docs
-			This entire document is way out of date. 
-			
+***** DONE Update project docs
+			This entire document is way out of date.
+
 			Try to rewrite the description if you can and make it more clear.
 ***** TODO Work out drawing flow
-		 	This is a tricky one. We want a single "drawing" to be atomic in the code,
-		 	but we want to be able to derive pictures from others, etc.. Maybe
-		 	something along the lines of undo chunking would be appropriate?
+			This is a tricky one. We want a single "drawing" to be atomic in the code,
+			but we want to be able to derive pictures from others, etc.. Maybe
+			something along the lines of undo chunking would be appropriate?
 ***** TODO Fix Coordinate System
-		 	Origin in the bottom left.
+			Origin in the bottom left.
 ***** TODO Master - Instance Logic
-		 	Sketchpad had it right in allowing objects to be instances of a master
-		 	object so that editing the master would change all occurences in the
-		 	compound product.
+			Sketchpad had it right in allowing objects to be instances of a master
+			object so that editing the master would change all occurences in the
+			compound product.
 
-		 	There's a mutability problem here though. I think what we want is a
-		 	prototypical inheritance system where you can create new templates from old
-		 	ones and where you can instantiate templates. Templates shouldn't change
-		 	though lest editing one picture change another. Instead you need a way take
-		 	some set of instances of a template and link them to a new template at will
-		 	so that we have a localised version of this master-instance editing style.
+			There's a mutability problem here though. I think what we want is a
+			prototypical inheritance system where you can create new templates from old
+			ones and where you can instantiate templates. Templates shouldn't change
+			though lest editing one picture change another. Instead you need a way take
+			some set of instances of a template and link them to a new template at will
+			so that we have a localised version of this master-instance editing style.
 
-		 	This is conceptually similar to Clojure's core principles: instances should
-		 	be mutable references to immuatable data.
+			This is conceptually similar to Clojure's core principles: instances should
+			be mutable references to immuatable data.
 ***** TODO Look at that declarative programming framework
 **** Done
 ***** DONE Clean up previous demos
-		 	The code is in such a terrible state right now. Experiments left for two
-		 	months... Time to clean it up and document it so that I don't have to start
-		 	from scratch a third time!
+			The code is in such a terrible state right now. Experiments left for two
+			months... Time to clean it up and document it so that I don't have to start
+			from scratch a third time!
 ***** DONE Capture drawn figures as code
 ***** DONE Demote Editing
-		 	It's taking up too much time and not as important as the generating code
-		 	for shapes. Just use a textarea for now and I'll get what I need for a
-		 	proof of concept.
+			It's taking up too much time and not as important as the generating code
+			for shapes. Just use a textarea for now and I'll get what I need for a
+			proof of concept.
 ***** DONE Security
-		 	Evalling raw code is a horrendous security hole. Don't do it.
+			Evalling raw code is a horrendous security hole. Don't do it.
 
-		 	Thought: This is intended as an end user application. No server, no page so
-		 	to speak. Any programming environment is a huge security risk: if you
-		 	compile and run code you copied off the internet without understanding it
-		 	you're in trouble. Of course that's a cop out. At least we have the browser
-		 	to protect you from most things...
-		 	
-		 	This needs serious thought. Most programmers don't do the right thing most
-		 	of the time, so obviously if we want non-programmers to use this we have to
-		 	figure out a security model that works by itself most of the time.
-		 	
-		 	Kay said that the browser should be part of the kernel if you really want
-		 	complete freedom with decent safety. I've never really considered kernel
-		 	programming.
-		 	
-		 	Look, if we stick to pure EDN then most of these problems go away. We're
-		 	reading data, not evalling code. I'm pretty sure I can describe any drawing
-		 	purely declaratively.
+			Thought: This is intended as an end user application. No server, no page so
+			to speak. Any programming environment is a huge security risk: if you
+			compile and run code you copied off the internet without understanding it
+			you're in trouble. Of course that's a cop out. At least we have the browser
+			to protect you from most things...
+
+			This needs serious thought. Most programmers don't do the right thing most
+			of the time, so obviously if we want non-programmers to use this we have to
+			figure out a security model that works by itself most of the time.
+
+			Kay said that the browser should be part of the kernel if you really want
+			complete freedom with decent safety. I've never really considered kernel
+			programming.
+
+			Look, if we stick to pure EDN then most of these problems go away. We're
+			reading data, not evalling code. I'm pretty sure I can describe any drawing
+			purely declaratively.
 **** Not Doing (right now)
 ***** TODO BUG: when code in textarea reformats, we lose the cursor.
 			That makes editing code very difficult.
 ***** TODO Examine how paren-soup and figwheel deal with broken code
-		 	We can't go trying to load code that doesn't read. 
-		 	
-		 	Low priority
+			We can't go trying to load code that doesn't read.
+
+			Low priority
