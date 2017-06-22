@@ -451,6 +451,7 @@ did as inspiration and a starting point.
 			This is conceptually similar to Clojure's core principles: instances should
 			be mutable references to immuatable data.
 ***** TODO Look at that declarative programming framework
+***** TODO Rate limit code window updates
 **** Done
 ***** DONE Clean up previous demos
 			The code is in such a terrible state right now. Experiments left for two
