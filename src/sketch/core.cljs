@@ -2,18 +2,22 @@
   (:require [re-frame.core :as re-frame]
             [reagent.core :as reagent]
             [sketch.components.canvas :as canvas]
+            [sketch.components.css :as css]
             [sketch.editor :as editor]
-            sketch.state))
+            [sketch.state :as sketch.state]))
 
 (enable-console-print!)
+
+;;FIXME: Is there no better way to foil cljr-clean-ns???
+(def nothing sketch.state/default-db)
 
 (def debug?
   ^boolean goog.DEBUG)
 
 (defn main-panel []
   (fn []
-    [:div
-     [editor/editor-panel]
+    [css/row
+     [editor/wired-panel]
      [canvas/canvas-panel]]))
 
 (defn mount-root []
