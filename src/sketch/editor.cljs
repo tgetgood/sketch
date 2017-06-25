@@ -34,10 +34,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn format-code
-  "Returns s formatted as Clojure code.
+  "Returns (str s) formatted as Clojure code.
   Results are undefined if s is not a readable Clojure sexp."
   [s]
-  (with-out-str (pprint/pprint s)))
+  ;; Currently does nothing. pprint is too slow to use here. str is pretty slow
+  ;; as well but tolerable.
+  (str s)
+  #_(with-out-str (pprint/pprint s)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Components
@@ -59,7 +62,15 @@
 (defn shape-token [shape current]
   [css/button
    (merge {:on-click
-           #(re-frame/dispatch [:sketch.events.editor/set-current shape])}
+           #(re-frame/dispatch [:sketch.events.editor/set-current shape])
+           :draggable true
+           :on-drag-start
+           (fn [e]
+             (let [x (re-frame/subscribe [:thumbnail shape])
+                   img (js/document.createElement "image")]
+               (.setAttribute img "src" @x)
+               (.appendChild (js/document.getElementById "app") img)
+               (-> e .-dataTransfer (.setDragImage img 0 0))))}
           (when (= shape current)
             {:style {:color "red"}}))
    shape])
