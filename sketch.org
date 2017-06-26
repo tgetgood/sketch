@@ -412,6 +412,31 @@ did as inspiration and a starting point.
 	 I'd like to figure out how to get all of the state syncronisation logic in
 	 one place instead of dancing between the two event models. It's dead simple
 	 right now but it isn't going to stay that way.
+** [2017-06-26 Mon 17:31]
+	 A thought occured to me while watching [[https://www.youtube.com/watch?v=2UJ5t2116lI][this]]. Very tangentially related to the
+	 talk material but isn't it fascinating how our brains work?
+
+	 Abstractions in code serve the same purpose as concepts, metaphor, and other
+	 forms of linguistic abstractions in thought. Thought and language in
+	 particular are far more flexible than code because everyone interprets every
+	 concept in their own way. There's enough overlap from person to person that
+	 communication can happen relatively easily, but there's also enough
+	 divergence that we can turn our language to remarkably different tasks.
+
+	 Need an example... Gravity (Aristotle, Galileo, Newton, Einstein), an app,
+	 random, any kind of jargon, &c..
+
+	 The holy grail of computation is reuse. No one has really come close to
+	 solving it in general though there are a small number of well (and properly
+	 so) respected things that can and are used over and over and over (think
+	 joda-time, numpy, &c.). Most of the time though, the abstraction, whatever it
+	 is, is made for a use case that overlaps 80% with your use case and you call
+	 it a leaky abstraction and hack through it.
+
+	 Can we create reusable concepts, modules, abstractions, metaphor, whatever,
+	 that can diverge in meaning, in the edges and interpretation, but still
+	 retain enough commonality to really count as reuse? I don't even know if that
+	 question is well formed.
 * Implementation
 ** Features
 	 These are kind of redundant with the examples given in the first section.
