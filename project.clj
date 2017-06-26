@@ -22,7 +22,16 @@
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
   :cljsbuild {:builds
-              [{:id "devcards"
+              [{:id "dev"
+                :source-paths ["src"]
+                :figwheel {:on-jsload "sketch.core/mount-root"}
+                :compiler {:main sketch.core
+                           :asset-path "js/compiled/out"
+                           :output-to "resources/public/js/compiled/sketch.js"
+                           :output-dir "resources/public/js/compiled/out"
+                           :source-map-timestamp true
+                           :preloads [devtools.preload]}}
+               {:id "devcards"
                 :source-paths ["src"]
                 :figwheel {:devcards true}
                 :compiler {:main       sketch.devcards 
@@ -31,25 +40,6 @@
                            :output-dir "resources/public/js/compiled/devcards_out"
                            :source-map-timestamp true
                            :preloads [devtools.preload]}}
-               {:id "dev"
-                :source-paths ["src"]
-
-                ;; the presence of a :figwheel configuration here
-                ;; will cause figwheel to inject the figwheel client
-                ;; into your build
-                :figwheel {:on-jsload "sketch.core/mount-root"}
-
-                :compiler {:main sketch.core
-                           :asset-path "js/compiled/out"
-                           :output-to "resources/public/js/compiled/sketch.js"
-                           :output-dir "resources/public/js/compiled/out"
-                           :source-map-timestamp true
-                           ;; To console.log CLJS data-structures make sure you enable devtools in Chrome
-                           ;; https://github.com/binaryage/cljs-devtools
-                           :preloads [devtools.preload]}}
-               ;; This next build is an compressed minified build for
-               ;; production. You can build this with:
-               ;; lein cljsbuild once min
                {:id "min"
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/sketch.js"
