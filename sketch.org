@@ -342,6 +342,38 @@ did as inspiration and a starting point.
 ** [2017-06-05 Mon 12:28]
 	 The re-frame lein template app has google closure config flags setup. That
 	 will be handy.
+** [2017-06-24 Sat 13:43]
+	 Let's retry encapsulating CSS in code. I've made a wrapper library
+	 (sketch.components.css) which defines CSS widgets like buttons and the grid
+	 structure. The only assumptions used in the client code is that the grid is
+	 twelve columns and meta-data on the column elements (of the form {:width 5})
+	 determins the width.
+
+	 Hopefully this separates the CSS stuff from the markup sufficiently that we
+	 can swap out Skeleton for something more appropriate when the time comes
+	 without rewriting anything outside of the skeleton namespace.
+
+	 I haven't accounted for responsivity in the current design!
+
+	 Ideally the rows themselves would be encoded in metadata and the entire
+	 layout would be meta to the component markup and functionality. That would
+	 require putting a tree walker in place but wouldn't be very hard.
+
+	 That would lead to extra wrapper divs which I'd like to avoid if
+	 possible. Not that they're really a problem judging by standard practice, but
+	 it leaves me feeling a bit icky inside,
+
+	 So what do we do about custom HTML bits like the textarea I've added :style
+	 metadata to?
+
+	 In keeping with the tradition of not having CSS classes in the components,
+	 I'm using inlike styles. That's generally considered a no no. Why is that?
+	 In this particular case I seriously doubt designers will be able to wade in
+	 anyway if they're the kind who can't read anything but html.
+
+	 Should I maybe try to isolate CSS depended widgets and give them classes and
+	 use CSS for them? I don't know. I should probably pick up a book and learn
+	 something properly about CSS...
 * Implementation
 ** Features
 	 These are kind of redundant with the examples given in the first section.

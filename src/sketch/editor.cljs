@@ -2,8 +2,8 @@
   (:require [cljs.js :refer [empty-state eval js-eval]]
             [cljs.pprint :as pprint]
             [cljs.tools.reader :refer [read-string]]
-            [devcards.core :refer-macros [defcard]]
             [re-frame.core :as re-frame]
+            [sketch.components.css :as css]
             [sketch.events.editor :as events]))
 
 ;; canvas <=> ds <=> string code buffer <=> code editor
@@ -33,8 +33,14 @@
 ;;;;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn format-code [s]
-  (with-out-str (pprint/pprint s)))
+(defn format-code
+  "Returns (str s) formatted as Clojure code.
+  Results are undefined if s is not a readable Clojure sexp."
+  [s]
+  ;; Currently does nothing. pprint is too slow to use here. str is pretty slow
+  ;; as well but tolerable.
+  (str s)
+  #_(with-out-str (pprint/pprint s)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Components
@@ -43,7 +49,9 @@
 (defn inner-editor-panel [content]
   [:textarea
    (assoc events/editor-event-map
-          :class "editor"
+          :style {:resize "none"
+                  :width "100%"
+                  :height "50vh"}
           :value (format-code content))])
 
 (defn editor-panel []
@@ -52,27 +60,43 @@
       [inner-editor-panel @content])))
 
 (defn shape-token [shape current]
-  [:div.shape-token
-   [:a
-    (merge {:on-click
-            #(re-frame/dispatch [:sketch.events.editor/set-current shape])}
-           (when (= shape current)
-             {:style {:color "red"}}))
-    shape]])
+  [css/button
+   (merge {:on-click
+           #(re-frame/dispatch [:sketch.events.editor/set-current shape])
+           :draggable true
+           :on-drag-start
+           (fn [e]
+             (let [x (re-frame/subscribe [:thumbnail shape])
+                   img (js/document.createElement "image")]
+               (.setAttribute img "src" @x)
+               (.appendChild (js/document.getElementById "app") img)
+               (-> e .-dataTransfer (.setDragImage img 0 0))))}
+          (when (= shape current)
+            {:style {:color "red"}}))
+   shape])
 
 (defn new-shape-token []
-  [:div.new-drawing
-   [:a {:on-click #(re-frame/dispatch [:sketch.events.editor/new-shape])}
-    [:span "+"]]])
+  [css/button {:on-click #(re-frame/dispatch [:sketch.events.editor/new-shape])}
+   [:span "+"]])
 
 (defn shape-list [shapes current]
-  (apply conj
-         [:div.drawings-list
-               [new-shape-token]]
-         (mapv (fn [s] [shape-token s current]) shapes)))
+  [:div
+   [css/row [new-shape-token]]
+   (map (fn [s]
+          (vary-meta [css/row [shape-token s current]]
+                     assoc :key s))
+     shapes)])
 
 (defn left-panel [shapes current code]
-  [:div
-   [:div.left [shape-list shapes current code]]
-   (when current 
-     [:div.right [inner-editor-panel code]])])
+  [css/row
+   ^{:width 3} [shape-list shapes current]
+   (when current
+     ^{:width 9} [inner-editor-panel code])])
+
+(defn wired-panel []
+  (let [drawings (re-frame/subscribe [:drawings])
+        current (re-frame/subscribe [:current-shape])
+        code (re-frame/subscribe [:current-drawing])]
+    (fn []
+      (let [shapes (keys @drawings)]
+        [left-panel shapes @current @code]))))
