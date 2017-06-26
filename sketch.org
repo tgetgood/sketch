@@ -246,6 +246,25 @@ did as inspiration and a starting point.
 	 [[http://worrydream.com/#!/LearnableProgramming][This]] is the essay I was thinking of, it seems. [[http://worrydream.com/#!2/LadderOfAbstraction][Up and Down the Ladder of
 	 Abstraction]] is also a good one.
 
+*** Environment Criteria
+		Victor's checklist for evaluating a programming environment for learnability
+
+		Does the environment allow the learner to...
+
+		read the vocabulary? -- Is meaning transparent? Is meaning explained in context, by showing and telling?
+		follow the flow? -- Is time visible and tangible? At all meaningful granularities?
+		see the state? -- Does the environment show the data? Show comparisons? Is hidden state eliminated?
+		create by reacting? -- Is something on screen as soon as possible? Is the parts bucket on the floor?
+		create by abstracting? -- Can the programmer start concrete, then generalize?
+
+		Does the language provide...
+
+		identity and metaphor? -- Is the computer's world connected to the programmer's world?
+		decomposition? -- Can the programmer break down her thoughts into mind-sized pieces?
+		recomposition? -- Can the programmer put diverse pieces together?
+		readability? -- Is meaning transparent?
+
+**** How do we compare?
 ** Readings / references
 *** [[http://www.red3d.com/cwr/papers/1982/ASAS82.html]]
 *** [[http://hillside.net/plop/2006/Papers/Library/interactive_informationgrap.pdf][Towards a Pattern Language for Interactive Information Graphics]]
@@ -255,7 +274,8 @@ did as inspiration and a starting point.
  - [[https://github.com/ztellman/penumbra]]
  - http://exupero.org/hazard/post/fractals/
  - [[http://perfectionkills.com/exploring-canvas-drawing-techniques/][drawing tools]]
-
+*** [[http://luna-lang.org][Luna]]
+		Visual UI that generates code.
 ** AI and RL
 	 - [[http://soar.eecs.umich.edu/][Soar]]
 		 It sounds rather vain and premature to design a framework for intelligence
