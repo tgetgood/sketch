@@ -35,3 +35,18 @@
     (re-frame/subscribe [:drawings])])
  (fn [[current drawings] _]
    (get drawings current)))
+
+(re-frame/reg-sub
+ :current-shape-data
+ (fn [_ _]
+   (re-frame/subscribe [:current-drawing]))
+ (fn [current _]
+   (:shape-data current)))
+
+(re-frame/reg-sub
+ :current-edit-string
+ (fn [_ _]
+   (re-frame/subscribe [:current-drawing]))
+ (fn [current _]
+   (:edit-string current)))
+

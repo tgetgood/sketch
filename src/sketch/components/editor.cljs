@@ -48,14 +48,14 @@
 
 (defn inner-editor-panel [content]
   [:textarea
-   (assoc events/editor-event-map
-          :style {:resize "none"
-                  :width "100%"
-                  :height "50vh"}
-          :value (format-code content))])
+   (merge events/editor-event-map
+          {:style {:resize "none"
+                   :width "100%"
+                   :height "50vh"}
+           :value content})])
 
 (defn editor-panel []
-  (let [content (re-frame/subscribe [:current-drawing])]
+  (let [content (re-frame/subscribe [:current-edit-string])]
     (fn []
       [inner-editor-panel @content])))
 
@@ -91,12 +91,12 @@
   [css/row
    ^{:width 3} [shape-list shapes current]
    (when current
-     ^{:width 9} [inner-editor-panel code])])
+     ^{:width 9} [editor-panel code])])
 
 (defn wired-panel []
   (let [drawings (re-frame/subscribe [:drawings])
         current (re-frame/subscribe [:current-shape])
-        code (re-frame/subscribe [:current-drawing])]
+        code (re-frame/subscribe [:current-edit-string])]
     (fn []
       (let [shapes (keys @drawings)]
         [left-panel shapes @current @code]))))

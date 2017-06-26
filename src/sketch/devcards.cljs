@@ -4,6 +4,7 @@
             [re-frame.core :as re-frame]
             [sketch.components.canvas :as canvas]
             [sketch.components.editor :as editor]
+            sketch.devcards.scratch
             sketch.state))
 
 ;;;; cljr hack
@@ -59,7 +60,7 @@ isn't an option. Let's just leave auto formatting for a later date.'"
    (fn []
      (let [drawings (re-frame/subscribe [:drawings])
            current (re-frame/subscribe [:current-shape])
-           code (re-frame/subscribe [:current-drawing])]
+           code (re-frame/subscribe [:current-shape-data])]
        (fn []
          (let [shapes (keys @drawings)]
            [editor/left-panel shapes @current @code]))))))

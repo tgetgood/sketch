@@ -10,6 +10,7 @@
 
 (def canvas-event-map
   (common/event-map canvas-events))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Event Handlers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -20,6 +21,16 @@
    (if-let [p (canvas/loc e)]
      (update db :active-pointers assoc (gensym) p)
      db)))
+
+(defn update-drawing
+  "Given a drawing and new shape-code, return an updated drawing"
+  [old d]
+  ;; REVIEW: We don't use the old drawing at all. This means that any drawing
+  ;; action overrides any incomplete editing action completely.
+  {:shape-data d
+   :edit-read d
+   ;; TODO: Redirect str through format-code
+   :edit-string (str d)})
 
 (re-frame/reg-event-fx
  :draw-move
@@ -36,12 +47,12 @@
       (let [p (get active-pointers point)
             q (canvas/loc e)
             t (js/Date.now)
-            old-drawing (get drawings current-shape)
+            old-drawing (get-in drawings [current-shape :shape-data])
             drawing (update old-drawing
                             :segments conj (canvas/segment p q t))]
         (when (and point q)
           {:db (-> db
-                   (assoc-in [:drawings current-shape] drawing)
+                   (update-in [:drawings current-shape] update-drawing drawing)
                    (update :active-pointers assoc point q))})))
     {:db db})))
 

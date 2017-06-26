@@ -58,9 +58,11 @@
 ;;;;; Drawing on canvas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def empty-canvas {:type :squiggle :segments []})
-
 (defmulti draw* (fn [_ x] (:type x)))
+
+;; If told to draw an invalid shape we just don't draw anything. User error
+;; notification should happen at the editor level.
+(defmethod draw* :default [_ _] nil)
 
 (defmethod draw* ::bezier
   [ctx [_ {[c1x c1y] ::c1
