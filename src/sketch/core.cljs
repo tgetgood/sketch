@@ -18,7 +18,7 @@
   (fn []
     [css/row
      [editor/wired-panel]
-     [canvas/canvas-panel]]))
+     [canvas/wired-panel]]))
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)

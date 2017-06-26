@@ -20,7 +20,20 @@
                              (assoc events/canvas-event-map
                                     :id "the-canvas")])}))
 
-(defn canvas-panel []
-  (let [drawing (re-frame/subscribe [:current-drawing])]
+(defn canvas-panel [drawing]
+  [canvas-inner drawing])
+
+;; HACK: This convention of having pure components and wired components serves a
+;; good purpose: it encourages components to be pure and stateless, which makes
+;; it easier to develop and document them in devcards. It's also serving to let
+;; me push the subscriptions further and further up the component tree which is
+;; interesting.
+;;
+;; The downside is a hacky looking naming convention that I have to put extra
+;; effort into keeping consistent.
+;; TODO: Keep an eye out for better ways to accomplish this.
+
+(defn wired-panel []
+  (let [drawing (re-frame/subscribe [:current-shape-data])]
     (fn []
-      [canvas-inner @drawing])))
+      [canvas-panel @drawing])))
