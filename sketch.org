@@ -394,6 +394,15 @@ did as inspiration and a starting point.
 	 Should I maybe try to isolate CSS depended widgets and give them classes and
 	 use CSS for them? I don't know. I should probably pick up a book and learn
 	 something properly about CSS...
+** [2017-06-26 Mon 13:58]
+	 Finally have proper code editing working. The value in the editor needs to be
+	 able to stay in an intermediate erroneous state while the user is typing
+	 otherwise how can they ever get to working code? Obvious of course, but it's
+	 surprising what one can overlook.
+
+	 Still have a problem where the image on the canvas disappears if the code
+	 reads but contains invalid shapes. Adding a default noop draw* method as an
+	 interim fix.
 * Implementation
 ** Features
 	 These are kind of redundant with the examples given in the first section.
@@ -504,6 +513,7 @@ did as inspiration and a starting point.
 			be mutable references to immuatable data.
 ***** TODO Look at that declarative programming framework
 ***** TODO Rate limit code window updates
+***** TODO
 **** Done
 ***** DONE Clean up previous demos
 			The code is in such a terrible state right now. Experiments left for two
