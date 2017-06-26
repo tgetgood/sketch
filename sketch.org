@@ -403,6 +403,15 @@ did as inspiration and a starting point.
 	 Still have a problem where the image on the canvas disappears if the code
 	 reads but contains invalid shapes. Adding a default noop draw* method as an
 	 interim fix.
+** [2017-06-26 Mon 14:05]
+	 Had to toss up the entire app data model again. It was surprisingly simple to
+	 do with re-frame's app structuring. I'm impressed. I still have some ugly
+	 interconnected state updates in the update-drawing fns in events.editor and
+	 events.canvas.
+
+	 I'd like to figure out how to get all of the state syncronisation logic in
+	 one place instead of dancing between the two event models. It's dead simple
+	 right now but it isn't going to stay that way.
 * Implementation
 ** Features
 	 These are kind of redundant with the examples given in the first section.
@@ -512,8 +521,10 @@ did as inspiration and a starting point.
 			This is conceptually similar to Clojure's core principles: instances should
 			be mutable references to immuatable data.
 ***** TODO Look at that declarative programming framework
-***** TODO Rate limit code window updates
-***** TODO
+***** TODO Set up a real data model for shapes
+			The current draw functions are a mess. The specification of what shapes
+			are is scattered all over the place and nothing holds it in sync across
+			the app.
 **** Done
 ***** DONE Clean up previous demos
 			The code is in such a terrible state right now. Experiments left for two
