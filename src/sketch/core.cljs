@@ -3,7 +3,7 @@
             [reagent.core :as reagent]
             [sketch.components.canvas :as canvas]
             [sketch.components.css :as css]
-            [sketch.editor :as editor]
+            [sketch.components.editor :as editor]
             [sketch.state :as sketch.state]))
 
 (enable-console-print!)

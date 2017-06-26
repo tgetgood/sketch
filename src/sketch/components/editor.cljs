@@ -1,4 +1,4 @@
-(ns sketch.editor
+(ns sketch.components.editor
   (:require [cljs.js :refer [empty-state eval js-eval]]
             [cljs.pprint :as pprint]
             [cljs.tools.reader :refer [read-string]]

@@ -3,7 +3,7 @@
             [devcards.core :refer-macros [defcard]]
             [re-frame.core :as re-frame]
             [sketch.components.canvas :as canvas]
-            [sketch.editor :as editor]
+            [sketch.components.editor :as editor]
             sketch.state))
 
 ;;;; cljr hack
