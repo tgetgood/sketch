@@ -17,9 +17,9 @@
 (defn width [] (quot js/window.innerWidth 2))
 (defn height [] (.-innerHeight js/window))
 
-(defn set-canvas-size! []
-  (set! (.-width (canvas)) (- (width) 10))
-  (set! (.-height (canvas)) (- (height) 10)))
+(defn set-canvas-size! [canvas]
+  (set! (.-width canvas) (- (width) 10))
+  (set! (.-height canvas) (- (height) 10)))
 
 (defn clear! [ctx]
   (.clearRect ctx 0 0 (width) (height)))

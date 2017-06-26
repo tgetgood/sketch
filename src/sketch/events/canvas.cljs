@@ -81,7 +81,7 @@
 (re-frame/reg-fx
  ::resize-canvas!
  (fn [_]
-   (canvas/set-canvas-size!)))
+   (canvas/set-canvas-size! (canvas/canvas))))
 
 (re-frame/reg-event-fx
  ::resize-canvas
