@@ -1,8 +1,8 @@
 (ns sketch.state
   (:require [re-frame.core :as re-frame]
-            [sketch.canvas :as canvas]))
+            [sketch.shapes :as shapes]))
 
-(def empty-canvas {:type :squiggle :segments []})
+(def empty-canvas (shapes/construct :sketch.shapes/squiggle []))
 
 (def empty-drawing
   {:edit-string (str empty-canvas)

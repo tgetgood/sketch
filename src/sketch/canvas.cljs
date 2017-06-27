@@ -1,6 +1,7 @@
 (ns sketch.canvas
   "Utils for manipulation HTML canvas"
-  (:require [sketch.affine :refer [dist]]))
+  (:require [sketch.affine :refer [dist]]
+            [sketch.shapes :as shapes]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Ugly canvas stuff
@@ -58,13 +59,16 @@
 ;;;;; Drawing on canvas
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmulti draw* (fn [_ x] (:type x)))
+(defprotocol IDraw
+  (draw [this ctx] "Draw yourself on the canvas"))
+
+(defmulti draw* (fn [_ x] (shapes/shape x)))
 
 ;; If told to draw an invalid shape we just don't draw anything. User error
 ;; notification should happen at the editor level.
 (defmethod draw* :default [_ _] nil)
 
-(defmethod draw* ::bezier
+#_(defmethod draw* ::bezier
   [ctx [_ {[c1x c1y] ::c1
            [c2x c2y] ::c2
            [e1x e1y] ::e1
@@ -72,12 +76,12 @@
   (.moveTo ctx e1x e1y)
   (.bezierCurveTo ctx c1x c1y c2x c2y e2x e2y))
 
-(defmethod draw* :s
+(defmethod draw* :sketch.shapes/line
   [ctx {[x1 y1] :start [x2 y2] :end}]
   (.moveTo ctx x1 y1)
   (.lineTo ctx x2 y2))
 
-(defmethod draw* :squiggle
+(defmethod draw* :sketch.shapes/squiggle
   [ctx {:keys [segments]}]
   (doall (map (partial draw* ctx) segments)))
 

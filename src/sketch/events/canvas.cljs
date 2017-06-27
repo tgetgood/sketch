@@ -93,18 +93,3 @@
  (fn [{[_ d] :event :as a}]
    {::redraw-canvas! d}))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;; Effects
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(re-frame/reg-sub
- :thumbnail
- (fn [_ _]
-   (re-frame/subscribe [:drawings]))
- (fn [drawings [_ shape]]
-   (let [code (get drawings shape)
-         ;;FIXME: Resource leak.
-         ocan (js/document.createElement "canvas")
-         ctx (.getContext ocan "2d")]
-     (canvas/draw! ctx code)
-     (.toDataURL ocan "image/jpeg" 0.2))))

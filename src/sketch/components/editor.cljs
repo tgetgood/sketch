@@ -60,19 +60,14 @@
       [inner-editor-panel @content])))
 
 (defn shape-token [shape current]
-  [css/row
+  [:div
    [css/button
     (merge {:on-click
             #(re-frame/dispatch [:sketch.events.editor/set-current shape])
-            :draggable true
-            :on-drag-start
-            (fn [e]
-              (let [img (js/document.getElementById shape)]
-                (-> e .-dataTransfer (.setDragImage img 0 0))))}
+            :draggable true}
            (when (= shape current)
              {:style {:color "red"}}))
-    shape]
-   [css/thumbnail shape]])
+    shape]])
 
 (defn new-shape-token []
   [css/button {:on-click #(re-frame/dispatch [:sketch.events.editor/new-shape])}
