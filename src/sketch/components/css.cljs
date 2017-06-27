@@ -1,4 +1,5 @@
-(ns sketch.components.css)
+(ns sketch.components.css
+  (:require [re-frame.core :as re-frame]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Helpers
@@ -50,3 +51,13 @@
 
 (defn button [& content]
   (vapply :a.button content))
+
+(defn thumbnail [shape]
+  (let [thumbnail-url (re-frame/subscribe [:shape-thumbnail shape])]
+    (fn []
+      (println @thumbnail-url)
+      [:img {:src @thumbnail-url
+             :id shape
+             :draggable false
+             :style {:height "38px"
+                     :width "38px"}}])))

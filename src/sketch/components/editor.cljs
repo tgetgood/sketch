@@ -60,20 +60,19 @@
       [inner-editor-panel @content])))
 
 (defn shape-token [shape current]
-  [css/button
-   (merge {:on-click
-           #(re-frame/dispatch [:sketch.events.editor/set-current shape])
-           :draggable true
-           :on-drag-start
-           (fn [e]
-             (let [x (re-frame/subscribe [:thumbnail shape])
-                   img (js/document.createElement "image")]
-               (.setAttribute img "src" @x)
-               (.appendChild (js/document.getElementById "app") img)
-               (-> e .-dataTransfer (.setDragImage img 0 0))))}
-          (when (= shape current)
-            {:style {:color "red"}}))
-   shape])
+  [css/row
+   [css/button
+    (merge {:on-click
+            #(re-frame/dispatch [:sketch.events.editor/set-current shape])
+            :draggable true
+            :on-drag-start
+            (fn [e]
+              (let [img (js/document.getElementById shape)]
+                (-> e .-dataTransfer (.setDragImage img 0 0))))}
+           (when (= shape current)
+             {:style {:color "red"}}))
+    shape]
+   [css/thumbnail shape]])
 
 (defn new-shape-token []
   [css/button {:on-click #(re-frame/dispatch [:sketch.events.editor/new-shape])}
@@ -89,9 +88,9 @@
 
 (defn left-panel [shapes current code]
   [css/row
-   ^{:width 3} [shape-list shapes current]
+   ^{:width 4} [shape-list shapes current]
    (when current
-     ^{:width 9} [editor-panel code])])
+     ^{:width 8} [editor-panel code])])
 
 (defn wired-panel []
   (let [drawings (re-frame/subscribe [:drawings])

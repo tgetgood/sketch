@@ -1,6 +1,6 @@
 (ns sketch.events.common
-  (:require [cljs.pprint :as pprint]
-            [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as re-frame]
+            [sketch.canvas :as canvas]))
 
 (defn event-map [m]
   (into
@@ -50,3 +50,19 @@
  (fn [current _]
    (:edit-string current)))
 
+(def silly-canvas
+  (js/document.createElement "canvas"))
+
+(def silly-ctx
+  (.getContext silly-canvas "2d"))
+
+(re-frame/reg-sub
+ :shape-thumbnail
+ (fn [_ _]
+   (re-frame/subscribe [:drawings]))
+ (fn [drawings [_ shape]]
+   (let [data (get-in drawings [shape :shape-data])]
+     (canvas/set-canvas-size! silly-canvas)
+     (canvas/clear! silly-ctx)
+     (canvas/draw! silly-ctx data)
+     (.toDataURL silly-canvas ))))
