@@ -246,6 +246,8 @@ did as inspiration and a starting point.
 	 [[http://worrydream.com/#!/LearnableProgramming][This]] is the essay I was thinking of, it seems. [[http://worrydream.com/#!2/LadderOfAbstraction][Up and Down the Ladder of
 	 Abstraction]] is also a good one.
 
+	 [[http://worrydream.com/#!/substroke][Substroke]] is clearly relevant.
+
 *** Environment Criteria
 		Victor's checklist for evaluating a programming environment for learnability
 
@@ -437,6 +439,12 @@ did as inspiration and a starting point.
 	 that can diverge in meaning, in the edges and interpretation, but still
 	 retain enough commonality to really count as reuse? I don't even know if that
 	 question is well formed.
+** [2017-06-27 Tue 21:34]
+	 I don't know what I want to do with shapes. Rather I want to do too many
+	 things at once with them and don't know how to reconcile all of that.
+
+	 So what do we want shapes to do?
+
 * Implementation
 ** Features
 	 These are kind of redundant with the examples given in the first section.
