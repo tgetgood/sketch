@@ -61,11 +61,6 @@
  (fn [{:keys [active-pointers] :as db} [_ e]]
    (update db :active-pointers dissoc (canvas/get-point active-pointers e))))
 
-(re-frame/reg-event-fx
- :resize-canvas
- (fn [_]
-   {:resize-canvas! true}))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Effects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
