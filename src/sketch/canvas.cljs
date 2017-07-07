@@ -25,6 +25,12 @@
 (defn clear! [ctx]
   (.clearRect ctx 0 0 (width) (height)))
 
+;; More accurate click location on canvas.
+(defn click-location [e]
+  (let [canvas (canvas/canvas)]
+    [(- (.-pageX e) (.-offsetLeft canvas))
+     (- (.-pageY e) (.-offsetTop canvas))]))
+
 (defn loc*
   [e]
   (when (and (.-clientX e) (.-clientY e))
