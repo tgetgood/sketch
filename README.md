@@ -9,7 +9,7 @@ See sketch.org for details.
 
 ## Status
 
-This project shares a lot with [Infograph](github.com/tgetgood/infograph),
+This project shares a lot with [Infograph](https://github.com/tgetgood/infograph),
 though they differ in how they work for the user.
 
 I've decided to put this guy on hold in favour of infograph since it shows more
